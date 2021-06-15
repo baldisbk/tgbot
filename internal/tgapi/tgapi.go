@@ -185,14 +185,15 @@ func (c *TGClient) request(httpmethod, apimethod string, input interface{}, outp
 	if rsp.StatusCode != http.StatusOK {
 		return xerrors.Errorf("http status: %d", rsp.StatusCode)
 	}
-	if output == nil {
-		return nil
-	}
-	b, err := ioutil.ReadAll(rsp.Body)
+	body, err = ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		return xerrors.Errorf("read rsp: %w", err)
 	}
-	err = json.Unmarshal(b, output)
+	fmt.Printf("\t HTTP RSP: %s\n", string(body))
+	if output == nil {
+		return nil
+	}
+	err = json.Unmarshal(body, output)
 	if err != nil {
 		return xerrors.Errorf("parse: %w", err)
 	}

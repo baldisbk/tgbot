@@ -6,7 +6,22 @@ type SMPredicate func(string, interface{}) bool
 type SMCallback func(interface{}) (interface{}, error)
 
 func EmptyPredicate(string, interface{}) bool              { return true }
+func NotNilPredicate(state string, input interface{}) bool { return input != nil }
 func EmptyCallback(input interface{}) (interface{}, error) { return input, nil }
+
+func CompositeCallback(callbacks ...SMCallback) SMCallback {
+	return func(input interface{}) (interface{}, error) {
+		var arg = input
+		var err error
+		for _, callback := range callbacks {
+			arg, err = callback(arg)
+			if err != nil {
+				return arg, err
+			}
+		}
+		return arg, nil
+	}
+}
 
 type Transition struct {
 	Source      string

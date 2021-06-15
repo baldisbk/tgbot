@@ -44,12 +44,20 @@ type Message struct {
 	Text      string `json:"text"`
 }
 
+func (m *Message) User() User                     { return m.From }
+func (m *Message) Message() interface{}           { return m }
+func (m *Message) Process(client *TGClient) error { return nil }
+
 type CallbackQuery struct {
 	Id           string `json:"id"`
 	From         User   `json:"from"`
 	ChatInstance string `json:"chat_instance"`
 	Data         string `json:"data"`
 }
+
+func (m *CallbackQuery) User() User                     { return m.From }
+func (m *CallbackQuery) Message() interface{}           { return m }
+func (m *CallbackQuery) Process(client *TGClient) error { return client.AnswerCallback(m.Id) }
 
 type Update struct {
 	UpdateId      uint64         `json:"update_id"`

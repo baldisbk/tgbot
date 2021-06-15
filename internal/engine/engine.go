@@ -13,6 +13,12 @@ type Engine struct {
 	cache  usercache.UserCache
 }
 
+type Signal interface {
+	User() tgapi.User
+	Message() interface{}
+	Process(client *tgapi.TGClient) error
+}
+
 func NewEngine(client *tgapi.TGClient, cache usercache.UserCache) *Engine {
 	return &Engine{
 		users:  map[uint64]usercache.User{},
@@ -21,42 +27,24 @@ func NewEngine(client *tgapi.TGClient, cache usercache.UserCache) *Engine {
 	}
 }
 
-func (e *Engine) Receive(update tgapi.Update) error {
-	var tgUser tgapi.User
-	var user usercache.User
-	var ok bool
-	var err error
-	switch {
-	case update.Message != nil:
-		tgUser = update.Message.From
-	case update.CallbackQuery != nil:
-		tgUser = update.CallbackQuery.From
-	}
-	if user, ok = e.users[tgUser.Id]; !ok {
+func (e *Engine) Receive(signal Signal) error {
+	tgUser := signal.User()
+	user, ok := e.users[tgUser.Id]
+	if !ok {
 		var err error
 		if user, err = e.cache.Get(tgUser); err != nil {
 			// database problem
 			return xerrors.Errorf("get user from cache: %w", err)
 		}
 	}
-	var rsp interface{}
-	switch {
-	case update.Message != nil:
-		rsp, err = user.Machine().Run(update.Message)
-		if err != nil {
-			// retriable (network)
-			return xerrors.Errorf("process message: %w", err)
-		}
-	case update.CallbackQuery != nil:
-		_, err := user.Machine().Run(update.CallbackQuery)
-		if err != nil {
-			// retriable (network)
-			return xerrors.Errorf("process callback: %w", err)
-		}
-		if err := e.client.AnswerCallback(update.CallbackQuery.Id); err != nil {
-			// retriable (network)
-			return xerrors.Errorf("confirm callback: %w", err)
-		}
+	rsp, err := user.Machine().Run(signal.Message())
+	if err != nil {
+		// retriable (network)
+		return xerrors.Errorf("process signal: %w", err)
+	}
+	if err := signal.Process(e.client); err != nil {
+		// retriable (network)
+		return xerrors.Errorf("postprocess signal: %w", err)
 	}
 
 	if err := user.UpdateState(rsp); err != nil {

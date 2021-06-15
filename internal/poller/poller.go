@@ -39,7 +39,14 @@ func (p *Poller) Run() {
 			continue
 		}
 		for _, upd := range upds {
-			if err := p.Engine.Receive(upd); err != nil {
+			var err error
+			switch {
+			case upd.Message != nil:
+				err = p.Engine.Receive(upd.Message)
+			case upd.CallbackQuery != nil:
+				err = p.Engine.Receive(upd.CallbackQuery)
+			}
+			if err != nil {
 				fmt.Printf("Error processing update (%#v): %#v\n", upd, err)
 			}
 		}

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 
 	"golang.org/x/xerrors"
 )
@@ -20,6 +19,7 @@ const (
 	SendCmd    = "sendMessage"
 	ReceiveCmd = "getUpdates"
 	AnswerCmd  = "answerCallbackQuery"
+	EditCmd    = "editMessageText"
 )
 
 // ======== Incoming updates ========
@@ -37,7 +37,7 @@ type Chat struct {
 }
 
 type Message struct {
-	MessageId int    `json:"message_id"`
+	MessageId uint64 `json:"message_id"`
 	From      User   `json:"from"`
 	Chat      Chat   `json:"chat"`
 	Date      uint64 `json:"date"`
@@ -62,12 +62,18 @@ type UpdateResponse struct {
 	Ok     bool     `json:"ok"`
 }
 
+type SendResponse struct {
+	Result Message `json:"result"`
+	Ok     bool    `json:"ok"`
+}
+
 // ======== Outgoing requests ========
 
 // base outgoing message
 type SendParams struct {
-	ChatId string `json:"chat_id"`
-	Text   string `json:"text"`
+	ChatId    uint64 `json:"chat_id"`
+	Text      string `json:"text"`
+	MessageId uint64 `json:"message_id,omitempty"`
 }
 
 // keyboard with answers
@@ -214,13 +220,27 @@ func (c *TGClient) GetUpdates() ([]Update, error) {
 	return res.Result, nil
 }
 
-func (c *TGClient) SendMessage(chat uint64, text string) error {
-	return c.request(
-		http.MethodPost, SendCmd,
+func (c *TGClient) EditMessage(chat uint64, text string, msgId uint64) (uint64, error) {
+	var msg SendResponse
+	var cmd = SendCmd
+	if msgId != 0 {
+		cmd = EditCmd
+	}
+	err := c.request(
+		http.MethodPost, cmd,
 		SendParams{
-			ChatId: strconv.FormatUint(chat, 10),
-			Text:   text,
-		}, nil)
+			ChatId:    chat,
+			Text:      text,
+			MessageId: msgId, // 0 will be omitted
+		}, &msg)
+	if err != nil {
+		return 0, err
+	}
+	return msg.Result.MessageId, nil
+}
+
+func (c *TGClient) SendMessage(chat uint64, text string) (uint64, error) {
+	return c.EditMessage(chat, text, 0)
 }
 
 func (c *TGClient) AnswerCallback(callbackId string) error {
@@ -231,28 +251,56 @@ func (c *TGClient) AnswerCallback(callbackId string) error {
 		}, nil)
 }
 
-func (c *TGClient) CreateAnswerKeyboard(chat uint64, text string, keyboard AnswerKeyboard) error {
-	return c.request(
-		http.MethodPost, SendCmd,
+func (c *TGClient) EditAnswerKeyboard(chat uint64, text string, msgId uint64, keyboard AnswerKeyboard) (uint64, error) {
+	var msg SendResponse
+	var cmd = SendCmd
+	if msgId != 0 {
+		cmd = EditCmd
+	}
+	err := c.request(
+		http.MethodPost, cmd,
 		SendAnswerKeyboard{
 			SendParams: SendParams{
-				ChatId: strconv.FormatUint(chat, 10),
-				Text:   text,
+				ChatId:    chat,
+				Text:      text,
+				MessageId: msgId,
 			},
 			ReplyMarkup: keyboard,
-		}, nil)
+		}, &msg)
+	if err != nil {
+		return 0, err
+	}
+	return msg.Result.MessageId, nil
 }
 
-func (c *TGClient) CreateInputKeyboard(chat uint64, text string, keyboard InlineKeyboard) error {
-	return c.request(
-		http.MethodPost, SendCmd,
+func (c *TGClient) CreateAnswerKeyboard(chat uint64, text string, keyboard AnswerKeyboard) (uint64, error) {
+	return c.EditAnswerKeyboard(chat, text, 0, keyboard)
+}
+
+func (c *TGClient) EditInputKeyboard(chat uint64, text string, msgId uint64, keyboard InlineKeyboard) (uint64, error) {
+	var msg SendResponse
+	var cmd = SendCmd
+	if msgId != 0 {
+		cmd = EditCmd
+	}
+	err := c.request(
+		http.MethodPost, cmd,
 		SendInlineKeyboard{
 			SendParams: SendParams{
-				ChatId: strconv.FormatUint(chat, 10),
-				Text:   text,
+				ChatId:    chat,
+				Text:      text,
+				MessageId: msgId,
 			},
 			ReplyMarkup: keyboard,
-		}, nil)
+		}, &msg)
+	if err != nil {
+		return 0, err
+	}
+	return msg.Result.MessageId, nil
+}
+
+func (c *TGClient) CreateInputKeyboard(chat uint64, text string, keyboard InlineKeyboard) (uint64, error) {
+	return c.EditInputKeyboard(chat, text, 0, keyboard)
 }
 
 func (c *TGClient) DropKeyboard(chat uint64, text string) error {
@@ -260,7 +308,7 @@ func (c *TGClient) DropKeyboard(chat uint64, text string) error {
 		http.MethodPost, SendCmd,
 		SendDropKeyboard{
 			SendParams: SendParams{
-				ChatId: strconv.FormatUint(chat, 10),
+				ChatId: chat,
 				Text:   text,
 			},
 			ReplyMarkup: DropKeyboard{RemoveKeyboard: true},

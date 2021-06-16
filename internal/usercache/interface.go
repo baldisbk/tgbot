@@ -8,6 +8,7 @@ import (
 type User interface {
 	UpdateState(interface{}) error
 	Machine() statemachine.Machine
+	Wake()
 }
 
 type UserCache interface {

@@ -45,7 +45,6 @@ func main() {
 
 	factory := impl.NewFactory(tgClient, tim)
 	cache.AttachFactory(factory)
-	// cache.AttachTimer(tim)
 
 	poller := poller.NewPoller(tgClient, eng)
 	wg.Add(1)

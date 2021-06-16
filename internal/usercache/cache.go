@@ -33,6 +33,7 @@ func (c *cache) Get(user tgapi.User) (User, error) {
 				return nil, xerrors.Errorf("umarshal: %w", err)
 			}
 		}
+		u.Wake()
 		c.cache[user] = u
 		return u, nil
 	}
@@ -59,6 +60,11 @@ func (c *cache) Close() {}
 
 func (c *cache) AttachFactory(factory UserFactory) {
 	c.factory = factory
+	// TODO:
+	// * list all users
+	// * make them from factory
+	// * wake them
+	// * ... and kill them, mwahaha!
 }
 
 type Config struct {

@@ -29,6 +29,14 @@ type user struct {
 // probably nothing needed
 func (u *user) UpdateState(interface{}) error { return nil }
 func (u *user) Machine() statemachine.Machine { return u.machine }
+func (u *user) Wake() {
+	for name, limit := range u.Limits {
+		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, limit.CheckTime)
+	}
+	for name, strike := range u.Strikes {
+		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, strike.CheckTime)
+	}
+}
 
 type userFactory struct {
 	tgClient *tgapi.TGClient

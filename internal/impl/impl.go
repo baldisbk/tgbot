@@ -3,6 +3,7 @@ package impl
 import (
 	"github.com/baldisbk/tgbot_sample/internal/statemachine"
 	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/internal/timer"
 	"github.com/baldisbk/tgbot_sample/internal/usercache"
 )
 
@@ -13,6 +14,7 @@ type user struct {
 	Strikes map[string]*StrikeAchievement
 
 	tgClient *tgapi.TGClient
+	timer    *timer.Timer
 	machine  statemachine.Machine
 
 	// dialog state
@@ -30,10 +32,11 @@ func (u *user) Machine() statemachine.Machine { return u.machine }
 
 type userFactory struct {
 	tgClient *tgapi.TGClient
+	timer    *timer.Timer
 }
 
-func NewFactory(tgClient *tgapi.TGClient) *userFactory {
-	return &userFactory{tgClient: tgClient}
+func NewFactory(tgClient *tgapi.TGClient, timer *timer.Timer) *userFactory {
+	return &userFactory{tgClient: tgClient, timer: timer}
 }
 
 func (f *userFactory) Factory(u tgapi.User) usercache.User {
@@ -45,6 +48,7 @@ func (f *userFactory) Factory(u tgapi.User) usercache.User {
 		Strikes: map[string]*StrikeAchievement{},
 
 		tgClient: f.tgClient,
+		timer:    f.timer,
 	}
 	res.machine = statemachine.NewSM(startState, makeTransitions(res))
 	return res

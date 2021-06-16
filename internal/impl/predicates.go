@@ -7,6 +7,7 @@ import (
 
 	"github.com/baldisbk/tgbot_sample/internal/statemachine"
 	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/internal/timer"
 )
 
 const (
@@ -53,7 +54,7 @@ func (u *user) isTimer(state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
-	_, ok := input.(*timerEvent)
+	_, ok := input.(*timer.TimerEvent)
 	return ok
 }
 

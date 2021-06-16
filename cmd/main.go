@@ -11,6 +11,7 @@ import (
 	"github.com/baldisbk/tgbot_sample/internal/impl"
 	"github.com/baldisbk/tgbot_sample/internal/poller"
 	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/internal/timer"
 	"github.com/baldisbk/tgbot_sample/internal/usercache"
 )
 
@@ -30,9 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	factory := impl.NewFactory(tgClient)
-
-	cache, err := usercache.NewCache(usercache.Config{Filename: dbName}, factory.Factory)
+	cache, err := usercache.NewCache(usercache.Config{Filename: dbName})
 	if err != nil {
 		fmt.Printf("DB client: %#v", err)
 		os.Exit(1)
@@ -40,6 +39,13 @@ func main() {
 	defer cache.Close()
 
 	eng := engine.NewEngine(tgClient, cache)
+
+	tim := timer.NewTimer(eng)
+	defer tim.Stop()
+
+	factory := impl.NewFactory(tgClient, tim)
+	cache.AttachFactory(factory.Factory)
+	// cache.AttachTimer(tim)
 
 	poller := poller.NewPoller(tgClient, eng)
 	wg.Add(1)

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/internal/timer"
 	"golang.org/x/xerrors"
 )
 
@@ -17,7 +18,6 @@ func (u *user) ask(message string, options []tgapi.InlineKeyboardButton) (interf
 		tgapi.InlineKeyboard{InlineKeyboard: [][]tgapi.InlineKeyboardButton{options}}); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
 	} else {
-		fmt.Println("==== msg id ", msgId)
 		u.lastMessage = msgId
 	}
 	return nil, nil
@@ -50,7 +50,7 @@ func (u *user) doStart(input interface{}) (interface{}, error) {
 }
 
 func (u *user) doTimer(input interface{}) (interface{}, error) {
-	rsp := input.(*timerEvent)
+	rsp := input.(*timer.TimerEvent)
 	message := fmt.Sprintf("Time has come to report progress of %s", rsp.Name)
 	return u.ask(message, []tgapi.InlineKeyboardButton{
 		{Text: "Let's go", CallbackData: reportCallback},
@@ -230,7 +230,7 @@ func (u *user) doFinishAdd(input interface{}) (interface{}, error) {
 	u.newLimit.Ascend = u.newLimit.Limit > u.newLimit.Initial
 	u.newLimit.Current = u.newLimit.Initial
 	u.newLimit.CheckTime = time.Now().Add(24 * time.Hour)
-	// TODO setup timer
+	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, u.newLimit.Name, u.newLimit.CheckTime)
 	u.Limits[u.newLimit.Name] = u.newLimit
 	u.newLimit = nil
 	u.lastMessage = 0
@@ -238,7 +238,7 @@ func (u *user) doFinishAdd(input interface{}) (interface{}, error) {
 }
 
 func (u *user) doReport(input interface{}) (interface{}, error) {
-	timer := input.(*timerEvent)
+	timer := input.(*timer.TimerEvent)
 	message := fmt.Sprintf("Okay, now would you enter current state of %s", timer.Name)
 	if _, err := u.tgClient.SendMessage(u.Id, message); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
@@ -265,7 +265,7 @@ func (u *user) doFinishReport(input interface{}) (interface{}, error) {
 			}
 		}
 		limit.CheckTime = limit.CheckTime.Add(24 * time.Hour)
-		// TODO setup timer
+		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, limit.Name, limit.CheckTime)
 	}
 	if strike, ok := u.Strikes[u.currentName]; ok {
 		if strike.Ascend && val >= strike.Limit {
@@ -286,7 +286,7 @@ func (u *user) doFinishReport(input interface{}) (interface{}, error) {
 			}
 		}
 		strike.CheckTime = strike.CheckTime.Add(24 * time.Hour)
-		// TODO setup timer
+		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, strike.Name, strike.CheckTime)
 	}
 	return nil, nil
 }

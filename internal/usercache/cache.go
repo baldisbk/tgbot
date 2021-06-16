@@ -57,11 +57,15 @@ func (c *cache) Put(user tgapi.User, state User) error {
 // TODO close DB connection
 func (c *cache) Close() {}
 
+func (c *cache) AttachFactory(ctor UserFactory) {
+	c.ctor = ctor
+}
+
 type Config struct {
 	Filename string
 }
 
-func NewCache(cfg Config, ctor UserFactory) (UserCache, error) {
+func NewCache(cfg Config) (*cache, error) {
 	db, err := NewDB(cfg.Filename)
 	if err != nil {
 		return nil, xerrors.Errorf("new db: %w", err)
@@ -69,6 +73,5 @@ func NewCache(cfg Config, ctor UserFactory) (UserCache, error) {
 	return &cache{
 		db:    db,
 		cache: map[tgapi.User]User{},
-		ctor:  ctor,
 	}, nil
 }

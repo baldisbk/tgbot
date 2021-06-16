@@ -39,7 +39,7 @@ func NewFactory(tgClient *tgapi.TGClient, timer *timer.Timer) *userFactory {
 	return &userFactory{tgClient: tgClient, timer: timer}
 }
 
-func (f *userFactory) Factory(u tgapi.User) usercache.User {
+func (f *userFactory) MakeUser(u tgapi.User) usercache.User {
 	res := &user{
 		Id:   u.Id,
 		Name: u.FirstName,

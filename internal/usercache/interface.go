@@ -16,4 +16,6 @@ type UserCache interface {
 	Close()
 }
 
-type UserFactory func(tgapi.User) User
+type UserFactory interface {
+	MakeUser(tgapi.User) User
+}

@@ -10,9 +10,9 @@ import (
 
 type cache struct {
 	// TODO: change to LRU cache
-	cache map[tgapi.User]User
-	ctor  UserFactory
-	db    *DB
+	cache   map[tgapi.User]User
+	factory UserFactory
+	db      *DB
 }
 
 func (c *cache) Get(user tgapi.User) (User, error) {
@@ -20,7 +20,7 @@ func (c *cache) Get(user tgapi.User) (User, error) {
 		fmt.Println("\t CACHED USER", user)
 		return u, nil
 	} else {
-		u := c.ctor(user)
+		u := c.factory.MakeUser(user)
 		stored, err := c.db.Get(user.Id)
 		if err != nil {
 			if err != noRowsError {
@@ -57,8 +57,8 @@ func (c *cache) Put(user tgapi.User, state User) error {
 // TODO close DB connection
 func (c *cache) Close() {}
 
-func (c *cache) AttachFactory(ctor UserFactory) {
-	c.ctor = ctor
+func (c *cache) AttachFactory(factory UserFactory) {
+	c.factory = factory
 }
 
 type Config struct {

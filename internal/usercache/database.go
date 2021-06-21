@@ -18,14 +18,16 @@ const (
 	schemaSQL = `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY ON CONFLICT REPLACE, name TEXT, contents TEXT);`
 	insertSQL = `INSERT INTO users (id, name, contents) VALUES (?, ?, ?);`
 	selectSQL = `SELECT name, contents FROM users WHERE id=?;`
+	listSQL   = `SELECT name, contents FROM users;` // TODO paging
 )
 
 var noRowsError = xerrors.New("no rows found")
 
 type DB struct {
-	sql *sql.DB
-	ins *sql.Stmt
-	sel *sql.Stmt
+	sql  *sql.DB
+	ins  *sql.Stmt
+	sel  *sql.Stmt
+	list *sql.Stmt
 }
 
 func NewDB(dbFile string) (*DB, error) {
@@ -45,11 +47,16 @@ func NewDB(dbFile string) (*DB, error) {
 	if err != nil {
 		return nil, xerrors.Errorf("prepare select: %w", err)
 	}
+	list, err := sqlDB.Prepare(listSQL)
+	if err != nil {
+		return nil, xerrors.Errorf("prepare list: %w", err)
+	}
 
 	db := DB{
-		sql: sqlDB,
-		ins: ins,
-		sel: sel,
+		sql:  sqlDB,
+		ins:  ins,
+		sel:  sel,
+		list: list,
 	}
 	return &db, nil
 }
@@ -90,6 +97,31 @@ func (db *DB) Get(id uint64) (*StoredUser, error) {
 		Name:     name,
 		Contents: contents,
 	}, nil
+}
+
+func (db *DB) List() ([]StoredUser, error) {
+	res, err := db.sql.Query(listSQL)
+	if err != nil {
+		return nil, xerrors.Errorf("exec: %w", err)
+	}
+	defer res.Close()
+	var users []StoredUser
+	for res.Next() {
+		if err := res.Err(); err != nil {
+			return nil, xerrors.Errorf("res next: %w", err)
+		}
+		var id uint64
+		var name, contents string
+		if err := res.Scan(&id, &name, &contents); err != nil {
+			return nil, xerrors.Errorf("scan: %w", err)
+		}
+		users = append(users, StoredUser{
+			Id:       id,
+			Name:     name,
+			Contents: contents,
+		})
+	}
+	return users, nil
 }
 
 func (db *DB) Close() {

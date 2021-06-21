@@ -60,11 +60,13 @@ func (c *cache) Close() {}
 
 func (c *cache) AttachFactory(factory UserFactory) {
 	c.factory = factory
-	// TODO:
-	// * list all users
-	// * make them from factory
-	// * wake them
-	// * ... and kill them, mwahaha!
+	users, _ := c.db.List()
+	for _, user := range users {
+		u := c.factory.MakeUser(tgapi.User{Id: user.Id, FirstName: user.Name})
+		if err := json.Unmarshal([]byte(user.Contents), u); err == nil {
+			u.Wake()
+		}
+	}
 }
 
 type Config struct {

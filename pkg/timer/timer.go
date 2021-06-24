@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jonboulle/clockwork"
+
 	"github.com/baldisbk/tgbot_sample/pkg/engine"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
@@ -25,22 +27,32 @@ type Timer struct {
 	mx     sync.Mutex
 	events map[tgapi.User]map[string]time.Time
 	queue  []*TimerEvent
+
 	stop   chan struct{}
+	ticker clockwork.Ticker
 }
 
 func NewTimer(eng *engine.Engine) *Timer {
+	return newTimer(eng, clockwork.NewRealClock().NewTicker(tickerPeriod))
+}
+
+func NewFakeTimer(eng *engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
+	return newTimer(eng, clock.NewTicker(period))
+}
+
+func newTimer(eng *engine.Engine, ticker clockwork.Ticker) *Timer {
 	res := &Timer{
 		events: map[tgapi.User]map[string]time.Time{},
 		stop:   make(chan struct{}),
+		ticker: ticker,
 	}
 	go func() {
-		ticker := time.NewTicker(tickerPeriod)
 		for {
 			select {
 			case <-res.stop:
 				ticker.Stop()
 				return
-			case <-ticker.C:
+			case <-res.ticker.Chan():
 				now := time.Now()
 				res.mx.Lock()
 				i := sort.Search(len(res.queue), func(i int) bool { return res.queue[i].Time.After(now) })

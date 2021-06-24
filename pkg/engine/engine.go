@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"github.com/baldisbk/tgbot_sample/internal/usercache"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/usercache"
 
 	"golang.org/x/xerrors"
 )

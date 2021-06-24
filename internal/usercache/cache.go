@@ -4,18 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/baldisbk/tgbot_sample/internal/impl"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	pkgcache "github.com/baldisbk/tgbot_sample/pkg/usercache"
 	"golang.org/x/xerrors"
 )
 
+type UserFactory interface {
+	MakeUser(tgapi.User) *impl.User
+}
+
 type cache struct {
 	// TODO: change to LRU cache
-	cache   map[tgapi.User]User
+	cache   map[tgapi.User]*impl.User
 	factory UserFactory
 	db      *DB
 }
 
-func (c *cache) Get(user tgapi.User) (User, error) {
+func (c *cache) Get(user tgapi.User) (pkgcache.User, error) {
 	if u, ok := c.cache[user]; ok {
 		fmt.Println("\t CACHED USER", user)
 		return u, nil
@@ -39,15 +45,21 @@ func (c *cache) Get(user tgapi.User) (User, error) {
 	}
 }
 
-func (c *cache) Put(user tgapi.User, state User) error {
-	c.cache[user] = state
+func (c *cache) Put(tgUser tgapi.User, state pkgcache.User) error {
 	content, err := json.Marshal(state)
 	if err != nil {
 		return xerrors.Errorf("marshal: %w", err)
 	}
+	var u impl.User
+	err = json.Unmarshal(content, &u)
+	if err != nil {
+		return xerrors.Errorf("marshal: %w", err)
+	}
+	c.cache[tgUser] = &u
+
 	if err := c.db.Add(StoredUser{
-		Id:       user.Id,
-		Name:     user.FirstName,
+		Id:       tgUser.Id,
+		Name:     tgUser.FirstName,
 		Contents: string(content),
 	}); err != nil {
 		return xerrors.Errorf("add: %w", err)
@@ -80,6 +92,6 @@ func NewCache(cfg Config) (*cache, error) {
 	}
 	return &cache{
 		db:    db,
-		cache: map[tgapi.User]User{},
+		cache: map[tgapi.User]*impl.User{},
 	}, nil
 }

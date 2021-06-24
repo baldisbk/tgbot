@@ -11,13 +11,13 @@ const (
 	reportState  = "report"
 )
 
-func (u *user) DontUnderstand(state string) statemachine.Transition {
+func (u *User) DontUnderstand(state string) statemachine.Transition {
 	return statemachine.Transition{
 		Source: state, Destination: state, Predicate: statemachine.NotNilPredicate, Callback: u.doNoUnderstand,
 	}
 }
 
-func makeTransitions(res *user) []statemachine.Transition {
+func makeTransitions(res *User) []statemachine.Transition {
 	return []statemachine.Transition{
 		// from initial
 		{

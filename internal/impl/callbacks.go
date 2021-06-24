@@ -13,7 +13,7 @@ import (
 
 const listLength = 5
 
-func (u *user) ask(message string, options []tgapi.InlineKeyboardButton) (interface{}, error) {
+func (u *User) ask(message string, options []tgapi.InlineKeyboardButton) (interface{}, error) {
 	if msgId, err := u.tgClient.EditInputKeyboard(u.Id, message, u.lastMessage,
 		tgapi.InlineKeyboard{InlineKeyboard: [][]tgapi.InlineKeyboardButton{options}}); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
@@ -23,7 +23,7 @@ func (u *user) ask(message string, options []tgapi.InlineKeyboardButton) (interf
 	return nil, nil
 }
 
-func (u *user) doNoUnderstand(input interface{}) (interface{}, error) {
+func (u *User) doNoUnderstand(input interface{}) (interface{}, error) {
 	message := fmt.Sprintf("Can't understand you")
 	if _, err := u.tgClient.SendMessage(u.Id, message); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
@@ -32,7 +32,7 @@ func (u *user) doNoUnderstand(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doStart(input interface{}) (interface{}, error) {
+func (u *User) doStart(input interface{}) (interface{}, error) {
 	// drop state to defaults
 	names, _ := u.getNames()
 	if len(names) != 0 {
@@ -49,7 +49,7 @@ func (u *user) doStart(input interface{}) (interface{}, error) {
 	})
 }
 
-func (u *user) doTimer(input interface{}) (interface{}, error) {
+func (u *User) doTimer(input interface{}) (interface{}, error) {
 	rsp := input.(*timer.TimerEvent)
 	message := fmt.Sprintf("Time has come to report progress of %s", rsp.Name)
 	return u.ask(message, []tgapi.InlineKeyboardButton{
@@ -58,7 +58,7 @@ func (u *user) doTimer(input interface{}) (interface{}, error) {
 	})
 }
 
-func (u *user) getNames() ([]string, int) {
+func (u *User) getNames() ([]string, int) {
 	names := []string{}
 	for name := range u.Limits {
 		names = append(names, name)
@@ -70,7 +70,7 @@ func (u *user) getNames() ([]string, int) {
 	return names, sort.SearchStrings(names, u.currentName)
 }
 
-func (u *user) doList(input interface{}) (interface{}, error) {
+func (u *User) doList(input interface{}) (interface{}, error) {
 	names, index := u.getNames()
 	if len(names) == 0 {
 		message := fmt.Sprintf("Nothing to display")
@@ -111,7 +111,7 @@ func (u *user) doList(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doListForward(input interface{}) (interface{}, error) {
+func (u *User) doListForward(input interface{}) (interface{}, error) {
 	names, index := u.getNames()
 	if index+listLength < len(names) {
 		index += listLength
@@ -120,7 +120,7 @@ func (u *user) doListForward(input interface{}) (interface{}, error) {
 	return u.doList(input)
 }
 
-func (u *user) doListBackward(input interface{}) (interface{}, error) {
+func (u *User) doListBackward(input interface{}) (interface{}, error) {
 	names, index := u.getNames()
 	if index-listLength < 0 {
 		index = 0
@@ -131,7 +131,7 @@ func (u *user) doListBackward(input interface{}) (interface{}, error) {
 	return u.doList(input)
 }
 
-func (u *user) doDisplay(input interface{}) (interface{}, error) {
+func (u *User) doDisplay(input interface{}) (interface{}, error) {
 	var message string
 	if limit, ok := u.Limits[u.currentName]; ok {
 		if limit.Done {
@@ -165,7 +165,7 @@ func (u *user) doDisplay(input interface{}) (interface{}, error) {
 	})
 }
 
-func (u *user) doPostpone(input interface{}) (interface{}, error) {
+func (u *User) doPostpone(input interface{}) (interface{}, error) {
 	// TODO custom postpone time via menu
 	// now postpone to 3 hour
 	if limit, ok := u.Limits[u.currentName]; ok {
@@ -178,7 +178,7 @@ func (u *user) doPostpone(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doStartAdd(input interface{}) (interface{}, error) {
+func (u *User) doStartAdd(input interface{}) (interface{}, error) {
 	message := fmt.Sprintf("Okay, now would you enter achievement name")
 	if _, err := u.tgClient.SendMessage(u.Id, message); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
@@ -188,7 +188,7 @@ func (u *user) doStartAdd(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doAdd(input interface{}) (interface{}, error) {
+func (u *User) doAdd(input interface{}) (interface{}, error) {
 	rsp := input.(*tgapi.Message)
 	switch u.stageNumber {
 	case 0:
@@ -226,7 +226,7 @@ func (u *user) doAdd(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doFinishAdd(input interface{}) (interface{}, error) {
+func (u *User) doFinishAdd(input interface{}) (interface{}, error) {
 	u.newLimit.Ascend = u.newLimit.Limit > u.newLimit.Initial
 	u.newLimit.Current = u.newLimit.Initial
 	u.newLimit.CheckTime = time.Now().Add(24 * time.Hour)
@@ -237,7 +237,7 @@ func (u *user) doFinishAdd(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doReport(input interface{}) (interface{}, error) {
+func (u *User) doReport(input interface{}) (interface{}, error) {
 	timer := input.(*timer.TimerEvent)
 	message := fmt.Sprintf("Okay, now would you enter current state of %s", timer.Name)
 	if _, err := u.tgClient.SendMessage(u.Id, message); err != nil {
@@ -247,7 +247,7 @@ func (u *user) doReport(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (u *user) doFinishReport(input interface{}) (interface{}, error) {
+func (u *User) doFinishReport(input interface{}) (interface{}, error) {
 	rsp := input.(*tgapi.Message)
 	val, _ := strconv.Atoi(rsp.Text)
 	if limit, ok := u.Limits[u.currentName]; ok {

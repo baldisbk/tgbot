@@ -42,7 +42,7 @@ func checkCallback(check string) statemachine.SMPredicate {
 	}
 }
 
-func (u *user) isStart(state string, input interface{}) bool {
+func (u *User) isStart(state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -50,7 +50,7 @@ func (u *user) isStart(state string, input interface{}) bool {
 	return ok && rsp.Text == "/start"
 }
 
-func (u *user) isTimer(state string, input interface{}) bool {
+func (u *User) isTimer(state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -58,7 +58,7 @@ func (u *user) isTimer(state string, input interface{}) bool {
 	return ok
 }
 
-func (u *user) isDisplay(state string, input interface{}) bool {
+func (u *User) isDisplay(state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -78,7 +78,7 @@ func (u *user) isDisplay(state string, input interface{}) bool {
 	return false
 }
 
-func (u *user) isValidInput(state string, input interface{}) bool {
+func (u *User) isValidInput(state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/baldisbk/tgbot_sample/internal/tgapi"
-	"github.com/baldisbk/tgbot_sample/internal/timer"
+	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/timer"
 	"golang.org/x/xerrors"
 )
 

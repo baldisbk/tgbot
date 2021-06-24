@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 	"golang.org/x/xerrors"
 )
 

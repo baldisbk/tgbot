@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/baldisbk/tgbot_sample/internal/statemachine"
-	"github.com/baldisbk/tgbot_sample/internal/tgapi"
-	"github.com/baldisbk/tgbot_sample/internal/timer"
+	"github.com/baldisbk/tgbot_sample/pkg/statemachine"
+	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/timer"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/baldisbk/tgbot_sample/internal/engine"
-	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/engine"
+	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
 
 const pollPeriod = time.Second

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/baldisbk/tgbot_sample/internal/engine"
-	"github.com/baldisbk/tgbot_sample/internal/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/engine"
+	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
 
 const tickerPeriod = time.Second

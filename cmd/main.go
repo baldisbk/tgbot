@@ -7,12 +7,12 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/baldisbk/tgbot_sample/internal/engine"
 	"github.com/baldisbk/tgbot_sample/internal/impl"
-	"github.com/baldisbk/tgbot_sample/internal/poller"
-	"github.com/baldisbk/tgbot_sample/internal/tgapi"
-	"github.com/baldisbk/tgbot_sample/internal/timer"
 	"github.com/baldisbk/tgbot_sample/internal/usercache"
+	"github.com/baldisbk/tgbot_sample/pkg/engine"
+	"github.com/baldisbk/tgbot_sample/pkg/poller"
+	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot_sample/pkg/timer"
 )
 
 const dbName = "db.sqlite"

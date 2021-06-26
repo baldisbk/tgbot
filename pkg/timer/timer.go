@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jonboulle/clockwork"
+	"golang.org/x/xerrors"
 
 	"github.com/baldisbk/tgbot_sample/pkg/engine"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
@@ -61,8 +62,14 @@ func newTimer(eng *engine.Engine, ticker clockwork.Ticker) *Timer {
 				res.queue = res.queue[i:]
 				res.mx.Unlock()
 				for _, event := range process {
-					// TODO process error
-					_ = eng.Receive(event)
+					err := eng.Receive(event)
+					if xerrors.Is(err, engine.BadStateError) || xerrors.Is(err, engine.RetriableError) {
+						// retry it next time
+						res.mx.Lock()
+						res.queue = append(res.queue, event)
+						res.mx.Unlock()
+						continue
+					}
 					res.mx.Lock()
 					delete(res.events[event.Receiver], event.Name)
 					res.mx.Unlock()

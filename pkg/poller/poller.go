@@ -46,6 +46,7 @@ func (p *Poller) Run() {
 			case upd.CallbackQuery != nil:
 				err = p.Engine.Receive(upd.CallbackQuery)
 			}
+			// TODO process different errors
 			if err != nil {
 				fmt.Printf("Error processing update (%#v): %#v\n", upd, err)
 			}

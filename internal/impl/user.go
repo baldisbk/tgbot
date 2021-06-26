@@ -1,10 +1,14 @@
 package impl
 
 import (
+	"time"
+
 	"github.com/baldisbk/tgbot_sample/pkg/statemachine"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 	"github.com/baldisbk/tgbot_sample/pkg/timer"
 )
+
+const achievementTimer = "achievement"
 
 type User struct {
 	Id      uint64
@@ -30,11 +34,15 @@ type User struct {
 func (u *User) UpdateState(interface{}) error { return nil }
 func (u *User) Machine() statemachine.Machine { return u.machine }
 
+func (u *User) SetTimer(name string, t time.Time) {
+	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, achievementTimer, t)
+}
+
 func (u *User) Wake() {
 	for name, limit := range u.Limits {
-		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, limit.CheckTime)
+		u.SetTimer(name, limit.CheckTime)
 	}
 	for name, strike := range u.Strikes {
-		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, strike.CheckTime)
+		u.SetTimer(name, strike.CheckTime)
 	}
 }

@@ -230,7 +230,7 @@ func (u *User) doFinishAdd(input interface{}) (interface{}, error) {
 	u.newLimit.Ascend = u.newLimit.Limit > u.newLimit.Initial
 	u.newLimit.Current = u.newLimit.Initial
 	u.newLimit.CheckTime = time.Now().Add(24 * time.Hour)
-	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, u.newLimit.Name, u.newLimit.CheckTime)
+	u.SetTimer(u.newLimit.Name, u.newLimit.CheckTime)
 	u.Limits[u.newLimit.Name] = u.newLimit
 	u.newLimit = nil
 	u.lastMessage = 0
@@ -265,7 +265,7 @@ func (u *User) doFinishReport(input interface{}) (interface{}, error) {
 			}
 		}
 		limit.CheckTime = limit.CheckTime.Add(24 * time.Hour)
-		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, limit.Name, limit.CheckTime)
+		u.SetTimer(limit.Name, limit.CheckTime)
 	}
 	if strike, ok := u.Strikes[u.currentName]; ok {
 		if strike.Ascend && val >= strike.Limit {
@@ -286,7 +286,7 @@ func (u *User) doFinishReport(input interface{}) (interface{}, error) {
 			}
 		}
 		strike.CheckTime = strike.CheckTime.Add(24 * time.Hour)
-		u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, strike.Name, strike.CheckTime)
+		u.SetTimer(strike.Name, strike.CheckTime)
 	}
 	return nil, nil
 }

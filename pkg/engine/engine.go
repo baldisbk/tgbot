@@ -16,7 +16,8 @@ type Engine struct {
 type Signal interface {
 	User() tgapi.User
 	Message() interface{}
-	Process(client *tgapi.TGClient) error
+	PreProcess(client *tgapi.TGClient) error
+	PostProcess(client *tgapi.TGClient) error
 }
 
 func NewEngine(client *tgapi.TGClient, cache usercache.UserCache) *Engine {
@@ -30,19 +31,23 @@ func NewEngine(client *tgapi.TGClient, cache usercache.UserCache) *Engine {
 func (e *Engine) Receive(signal Signal) error {
 	tgUser := signal.User()
 	user, ok := e.users[tgUser.Id]
+	var err error
 	if !ok {
-		var err error
 		if user, err = e.cache.Get(tgUser); err != nil {
 			// database problem
 			return xerrors.Errorf("get user from cache: %w", err)
 		}
+	}
+	if err := signal.PreProcess(e.client); err != nil {
+		// retriable (network)
+		return xerrors.Errorf("preprocess signal: %w", err)
 	}
 	rsp, err := user.Machine().Run(signal.Message())
 	if err != nil {
 		// retriable (network)
 		return xerrors.Errorf("process signal: %w", err)
 	}
-	if err := signal.Process(e.client); err != nil {
+	if err := signal.PostProcess(e.client); err != nil {
 		// retriable (network)
 		return xerrors.Errorf("postprocess signal: %w", err)
 	}

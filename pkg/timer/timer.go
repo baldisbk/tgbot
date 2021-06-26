@@ -19,9 +19,10 @@ type TimerEvent struct {
 	Time     time.Time
 }
 
-func (t *TimerEvent) User() tgapi.User                     { return t.Receiver }
-func (t *TimerEvent) Message() interface{}                 { return t }
-func (t *TimerEvent) Process(client *tgapi.TGClient) error { return nil }
+func (t *TimerEvent) User() tgapi.User                         { return t.Receiver }
+func (t *TimerEvent) Message() interface{}                     { return t }
+func (t *TimerEvent) PreProcess(client *tgapi.TGClient) error  { return nil }
+func (t *TimerEvent) PostProcess(client *tgapi.TGClient) error { return nil }
 
 type Timer struct {
 	mx     sync.Mutex

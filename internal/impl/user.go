@@ -8,7 +8,12 @@ import (
 	"github.com/baldisbk/tgbot_sample/pkg/timer"
 )
 
-const achievementTimer = "achievement"
+const (
+	achievementTimer = "achievement"
+	timeoutTimer     = "timeout"
+)
+
+const interactionTimeout = 10 * time.Minute
 
 type User struct {
 	Id      uint64
@@ -36,6 +41,10 @@ func (u *User) Machine() statemachine.Machine { return u.machine }
 
 func (u *User) SetTimer(name string, t time.Time) {
 	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, achievementTimer, t)
+}
+func (u *User) SetTimeout() {
+	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name},
+		"timeout", achievementTimer, time.Now().Add(interactionTimeout))
 }
 
 func (u *User) Wake() {

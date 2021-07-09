@@ -25,6 +25,14 @@ func (u *User) ask(message string, options []tgapi.InlineKeyboardButton) (interf
 
 func (u *User) doNoUnderstand(input interface{}) (interface{}, error) {
 	message := fmt.Sprintf("Can't understand you")
+	switch input.(type) {
+	case *timer.TimerEvent:
+		// ignore
+		return nil, nil
+	case *tgapi.AnswerCallback:
+		// ignore
+		return nil, nil
+	}
 	if _, err := u.tgClient.SendMessage(u.Id, message); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
 	}
@@ -188,6 +196,12 @@ func (u *User) doStartAdd(input interface{}) (interface{}, error) {
 	return nil, nil
 }
 
+func (u *User) dropAdd(input interface{}) (interface{}, error) {
+	u.lastMessage = 0
+	u.stageNumber = 0
+	return nil, nil
+}
+
 func (u *User) doAdd(input interface{}) (interface{}, error) {
 	rsp := input.(*tgapi.Message)
 	switch u.stageNumber {
@@ -213,8 +227,6 @@ func (u *User) doAdd(input interface{}) (interface{}, error) {
 	case 3:
 		val, _ := strconv.Atoi(rsp.Text)
 		u.newLimit.Initial = val
-		u.lastMessage = 0
-		u.stageNumber = 0
 		message := fmt.Sprintf("So, you are to add %s, OK?", u.newLimit.Name)
 		return u.ask(message, []tgapi.InlineKeyboardButton{
 			{Text: "OK", CallbackData: okCallback},

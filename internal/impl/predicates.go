@@ -54,8 +54,21 @@ func (u *User) isTimer(state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
-	_, ok := input.(*timer.TimerEvent)
-	return ok
+	timer, ok := input.(*timer.TimerEvent)
+	return ok && timer.Type == achievementTimer
+}
+
+func (u *User) isRollback(state string, input interface{}) bool {
+	if input == nil {
+		return false
+	}
+	switch event := input.(type) {
+	case *timer.TimerEvent:
+		return event.Type == timeoutTimer
+	case *tgapi.Message:
+		return event.Text == "/start"
+	}
+	return false
 }
 
 func (u *User) isDisplay(state string, input interface{}) bool {
@@ -83,7 +96,6 @@ func (u *User) isValidInput(state string, input interface{}) bool {
 		return false
 	}
 	rsp, ok := input.(*tgapi.Message)
-	// TODO validate input?
 	switch state {
 	case addState:
 		switch u.stageNumber {

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 	"github.com/baldisbk/tgbot_sample/pkg/usercache"
@@ -40,6 +41,7 @@ func (e *Engine) Receive(ctx context.Context, signal Signal) error {
 			return xerrors.Errorf("get user from cache: %w", err)
 		}
 	}
+	fmt.Printf("Receive for user %v: %#v\n", user, signal)
 	if err := signal.PreProcess(ctx, e.client); err != nil {
 		// retriable (network)
 		return xerrors.Errorf("preprocess signal: %w", err)

@@ -17,14 +17,14 @@ type UserFactory interface {
 
 type cache struct {
 	// TODO: change to LRU cache
-	cache   map[tgapi.User]*impl.User
+	cache   map[uint64]*impl.User
 	factory UserFactory
 	db      *DB
 }
 
 func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error) {
-	if u, ok := c.cache[user]; ok {
-		fmt.Println("\t CACHED USER", user)
+	if u, ok := c.cache[user.Id]; ok {
+		fmt.Println("\t CACHED USER", user, u)
 		return u, nil
 	} else {
 		u := c.factory.MakeUser(user)
@@ -41,7 +41,8 @@ func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error)
 			}
 		}
 		u.Wake()
-		c.cache[user] = u
+		fmt.Println("\t SAVE USER", user, u)
+		c.cache[user.Id] = u
 		return u, nil
 	}
 }
@@ -51,13 +52,6 @@ func (c *cache) Put(ctx context.Context, tgUser tgapi.User, state pkgcache.User)
 	if err != nil {
 		return xerrors.Errorf("marshal: %w", err)
 	}
-	var u impl.User
-	err = json.Unmarshal(content, &u)
-	if err != nil {
-		return xerrors.Errorf("marshal: %w", err)
-	}
-	c.cache[tgUser] = &u
-
 	if err := c.db.Add(StoredUser{
 		Id:       tgUser.Id,
 		Name:     tgUser.FirstName,
@@ -93,6 +87,6 @@ func NewCache(cfg Config) (*cache, error) {
 	}
 	return &cache{
 		db:    db,
-		cache: map[tgapi.User]*impl.User{},
+		cache: map[uint64]*impl.User{},
 	}, nil
 }

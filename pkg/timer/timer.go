@@ -1,6 +1,7 @@
 package timer
 
 import (
+	"context"
 	"sort"
 	"sync"
 	"time"
@@ -28,38 +29,36 @@ type TimerEvent struct {
 
 func (t *TimerEvent) key() timerKey { return timerKey{Type: t.Type, Name: t.Name} }
 
-func (t *TimerEvent) User() tgapi.User                         { return t.Receiver }
-func (t *TimerEvent) Message() interface{}                     { return t }
-func (t *TimerEvent) PreProcess(client *tgapi.TGClient) error  { return nil }
-func (t *TimerEvent) PostProcess(client *tgapi.TGClient) error { return nil }
+func (t *TimerEvent) User() tgapi.User                                              { return t.Receiver }
+func (t *TimerEvent) Message() interface{}                                          { return t }
+func (t *TimerEvent) PreProcess(ctx context.Context, client *tgapi.TGClient) error  { return nil }
+func (t *TimerEvent) PostProcess(ctx context.Context, client *tgapi.TGClient) error { return nil }
 
 type Timer struct {
 	mx     sync.Mutex
 	events map[tgapi.User]map[timerKey]time.Time
 	queue  []*TimerEvent
 
-	stop   chan struct{}
 	ticker clockwork.Ticker
 }
 
-func NewTimer(eng *engine.Engine) *Timer {
-	return newTimer(eng, clockwork.NewRealClock().NewTicker(tickerPeriod))
+func NewTimer(ctx context.Context, eng *engine.Engine) *Timer {
+	return newTimer(ctx, eng, clockwork.NewRealClock().NewTicker(tickerPeriod))
 }
 
-func NewFakeTimer(eng *engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
-	return newTimer(eng, clock.NewTicker(period))
+func NewFakeTimer(ctx context.Context, eng *engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
+	return newTimer(ctx, eng, clock.NewTicker(period))
 }
 
-func newTimer(eng *engine.Engine, ticker clockwork.Ticker) *Timer {
+func newTimer(ctx context.Context, eng *engine.Engine, ticker clockwork.Ticker) *Timer {
 	res := &Timer{
 		events: map[tgapi.User]map[timerKey]time.Time{},
-		stop:   make(chan struct{}),
 		ticker: ticker,
 	}
 	go func() {
 		for {
 			select {
-			case <-res.stop:
+			case <-ctx.Done():
 				ticker.Stop()
 				return
 			case <-res.ticker.Chan():
@@ -70,7 +69,7 @@ func newTimer(eng *engine.Engine, ticker clockwork.Ticker) *Timer {
 				res.queue = res.queue[i:]
 				res.mx.Unlock()
 				for _, event := range process {
-					err := eng.Receive(event)
+					err := eng.Receive(ctx, event)
 					if xerrors.Is(err, engine.BadStateError) || xerrors.Is(err, engine.RetriableError) {
 						// retry it next time
 						res.mx.Lock()
@@ -87,8 +86,6 @@ func newTimer(eng *engine.Engine, ticker clockwork.Ticker) *Timer {
 	}()
 	return res
 }
-
-func (t *Timer) Stop() { close(t.stop) }
 
 func (t *Timer) SetAlarm(user tgapi.User, name string, typ string, at time.Time) {
 	t.mx.Lock()

@@ -2,6 +2,7 @@ package tgapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -44,10 +45,10 @@ type Message struct {
 	Text      string `json:"text"`
 }
 
-func (m *Message) User() User                         { return m.From }
-func (m *Message) Message() interface{}               { return m }
-func (m *Message) PreProcess(client *TGClient) error  { return nil }
-func (m *Message) PostProcess(client *TGClient) error { return nil }
+func (m *Message) User() User                                              { return m.From }
+func (m *Message) Message() interface{}                                    { return m }
+func (m *Message) PreProcess(ctx context.Context, client *TGClient) error  { return nil }
+func (m *Message) PostProcess(ctx context.Context, client *TGClient) error { return nil }
 
 type CallbackQuery struct {
 	Id           string `json:"id"`
@@ -56,10 +57,12 @@ type CallbackQuery struct {
 	Data         string `json:"data"`
 }
 
-func (m *CallbackQuery) User() User                         { return m.From }
-func (m *CallbackQuery) Message() interface{}               { return m }
-func (m *CallbackQuery) PreProcess(client *TGClient) error  { return client.AnswerCallback(m.Id) }
-func (m *CallbackQuery) PostProcess(client *TGClient) error { return nil }
+func (m *CallbackQuery) User() User           { return m.From }
+func (m *CallbackQuery) Message() interface{} { return m }
+func (m *CallbackQuery) PreProcess(ctx context.Context, client *TGClient) error {
+	return client.AnswerCallback(ctx, m.Id)
+}
+func (m *CallbackQuery) PostProcess(ctx context.Context, client *TGClient) error { return nil }
 
 type Update struct {
 	UpdateId      uint64         `json:"update_id"`
@@ -152,7 +155,7 @@ type TGClient struct {
 	offset uint64
 }
 
-func MakeCmd(address, token string) (string, error) {
+func makeCmd(address, token string) (string, error) {
 	u, err := url.Parse(address)
 	if err != nil {
 		return "", err
@@ -161,20 +164,20 @@ func MakeCmd(address, token string) (string, error) {
 	return u.String() + "/", nil
 }
 
-func NewClient(url string, token string) (*TGClient, error) {
+func NewClient(ctx context.Context, url string, token string) (*TGClient, error) {
 	cli := &TGClient{client: &http.Client{}}
-	path, err := MakeCmd(url, token)
+	path, err := makeCmd(url, token)
 	if err != nil {
 		return nil, xerrors.Errorf("make url: %w", err)
 	}
 	cli.path = path
-	if err := cli.Test(); err != nil {
+	if err := cli.Test(ctx); err != nil {
 		return nil, xerrors.Errorf("test: %w", err)
 	}
 	return cli, nil
 }
 
-func (c *TGClient) Test() error {
+func (c *TGClient) Test(ctx context.Context) error {
 	req, err := http.NewRequest(http.MethodGet, c.path+TestCmd, nil)
 	if err != nil {
 		return xerrors.Errorf("make req: %w", err)
@@ -186,7 +189,7 @@ func (c *TGClient) Test() error {
 	return nil
 }
 
-func (c *TGClient) request(httpmethod, apimethod string, input interface{}, output interface{}) error {
+func (c *TGClient) request(ctx context.Context, httpmethod, apimethod string, input interface{}, output interface{}) error {
 	body, err := json.Marshal(input)
 	req, err := http.NewRequest(httpmethod, c.path+apimethod, bytes.NewBuffer(body))
 	if err != nil {
@@ -216,9 +219,9 @@ func (c *TGClient) request(httpmethod, apimethod string, input interface{}, outp
 	return nil
 }
 
-func (c *TGClient) GetUpdates() ([]Update, error) {
+func (c *TGClient) GetUpdates(ctx context.Context) ([]Update, error) {
 	var res UpdateResponse
-	err := c.request(http.MethodGet, ReceiveCmd, GetUpdates{Offset: c.offset}, &res)
+	err := c.request(ctx, http.MethodGet, ReceiveCmd, GetUpdates{Offset: c.offset}, &res)
 	if err != nil {
 		return nil, xerrors.Errorf("request: %w", err)
 	}
@@ -230,13 +233,13 @@ func (c *TGClient) GetUpdates() ([]Update, error) {
 	return res.Result, nil
 }
 
-func (c *TGClient) EditMessage(chat uint64, text string, msgId uint64) (uint64, error) {
+func (c *TGClient) EditMessage(ctx context.Context, chat uint64, text string, msgId uint64) (uint64, error) {
 	var msg SendResponse
 	var cmd = SendCmd
 	if msgId != 0 {
 		cmd = EditCmd
 	}
-	err := c.request(
+	err := c.request(ctx,
 		http.MethodPost, cmd,
 		SendParams{
 			ChatId:    chat,
@@ -249,25 +252,25 @@ func (c *TGClient) EditMessage(chat uint64, text string, msgId uint64) (uint64, 
 	return msg.Result.MessageId, nil
 }
 
-func (c *TGClient) SendMessage(chat uint64, text string) (uint64, error) {
-	return c.EditMessage(chat, text, 0)
+func (c *TGClient) SendMessage(ctx context.Context, chat uint64, text string) (uint64, error) {
+	return c.EditMessage(ctx, chat, text, 0)
 }
 
-func (c *TGClient) AnswerCallback(callbackId string) error {
-	return c.request(
+func (c *TGClient) AnswerCallback(ctx context.Context, callbackId string) error {
+	return c.request(ctx,
 		http.MethodPost, AnswerCmd,
 		AnswerCallback{
 			CallbackQueryId: callbackId,
 		}, nil)
 }
 
-func (c *TGClient) EditAnswerKeyboard(chat uint64, text string, msgId uint64, keyboard AnswerKeyboard) (uint64, error) {
+func (c *TGClient) EditAnswerKeyboard(ctx context.Context, chat uint64, text string, msgId uint64, keyboard AnswerKeyboard) (uint64, error) {
 	var msg SendResponse
 	var cmd = SendCmd
 	if msgId != 0 {
 		cmd = EditCmd
 	}
-	err := c.request(
+	err := c.request(ctx,
 		http.MethodPost, cmd,
 		SendAnswerKeyboard{
 			SendParams: SendParams{
@@ -283,17 +286,17 @@ func (c *TGClient) EditAnswerKeyboard(chat uint64, text string, msgId uint64, ke
 	return msg.Result.MessageId, nil
 }
 
-func (c *TGClient) CreateAnswerKeyboard(chat uint64, text string, keyboard AnswerKeyboard) (uint64, error) {
-	return c.EditAnswerKeyboard(chat, text, 0, keyboard)
+func (c *TGClient) CreateAnswerKeyboard(ctx context.Context, chat uint64, text string, keyboard AnswerKeyboard) (uint64, error) {
+	return c.EditAnswerKeyboard(ctx, chat, text, 0, keyboard)
 }
 
-func (c *TGClient) EditInputKeyboard(chat uint64, text string, msgId uint64, keyboard InlineKeyboard) (uint64, error) {
+func (c *TGClient) EditInputKeyboard(ctx context.Context, chat uint64, text string, msgId uint64, keyboard InlineKeyboard) (uint64, error) {
 	var msg SendResponse
 	var cmd = SendCmd
 	if msgId != 0 {
 		cmd = EditCmd
 	}
-	err := c.request(
+	err := c.request(ctx,
 		http.MethodPost, cmd,
 		SendInlineKeyboard{
 			SendParams: SendParams{
@@ -309,12 +312,12 @@ func (c *TGClient) EditInputKeyboard(chat uint64, text string, msgId uint64, key
 	return msg.Result.MessageId, nil
 }
 
-func (c *TGClient) CreateInputKeyboard(chat uint64, text string, keyboard InlineKeyboard) (uint64, error) {
-	return c.EditInputKeyboard(chat, text, 0, keyboard)
+func (c *TGClient) CreateInputKeyboard(ctx context.Context, chat uint64, text string, keyboard InlineKeyboard) (uint64, error) {
+	return c.EditInputKeyboard(ctx, chat, text, 0, keyboard)
 }
 
-func (c *TGClient) DropKeyboard(chat uint64, text string) error {
-	return c.request(
+func (c *TGClient) DropKeyboard(ctx context.Context, chat uint64, text string) error {
+	return c.request(ctx,
 		http.MethodPost, SendCmd,
 		SendDropKeyboard{
 			SendParams: SendParams{

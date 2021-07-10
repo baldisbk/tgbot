@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -36,13 +37,13 @@ func callbackResponse(input interface{}) (bool, string) {
 }
 
 func checkCallback(check string) statemachine.SMPredicate {
-	return func(state string, input interface{}) bool {
+	return func(ctx context.Context, state string, input interface{}) bool {
 		ok, rsp := callbackResponse(input)
 		return ok && (check == "*" || rsp == check)
 	}
 }
 
-func (u *User) isStart(state string, input interface{}) bool {
+func (u *User) isStart(ctx context.Context, state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -50,7 +51,7 @@ func (u *User) isStart(state string, input interface{}) bool {
 	return ok && rsp.Text == "/start"
 }
 
-func (u *User) isTimer(state string, input interface{}) bool {
+func (u *User) isTimer(ctx context.Context, state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -58,7 +59,7 @@ func (u *User) isTimer(state string, input interface{}) bool {
 	return ok && timer.Type == achievementTimer
 }
 
-func (u *User) isRollback(state string, input interface{}) bool {
+func (u *User) isRollback(ctx context.Context, state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -71,7 +72,7 @@ func (u *User) isRollback(state string, input interface{}) bool {
 	return false
 }
 
-func (u *User) isDisplay(state string, input interface{}) bool {
+func (u *User) isDisplay(ctx context.Context, state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}
@@ -91,7 +92,7 @@ func (u *User) isDisplay(state string, input interface{}) bool {
 	return false
 }
 
-func (u *User) isValidInput(state string, input interface{}) bool {
+func (u *User) isValidInput(ctx context.Context, state string, input interface{}) bool {
 	if input == nil {
 		return false
 	}

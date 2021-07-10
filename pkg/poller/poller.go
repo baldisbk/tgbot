@@ -1,6 +1,7 @@
 package poller
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,27 +14,26 @@ const pollPeriod = time.Second
 type Poller struct {
 	Client *tgapi.TGClient
 	Engine *engine.Engine
-
-	stopper chan struct{}
 }
 
-func NewPoller(client *tgapi.TGClient, engine *engine.Engine) *Poller {
-	return &Poller{
-		Client:  client,
-		Engine:  engine,
-		stopper: make(chan struct{}),
+func NewPoller(ctx context.Context, client *tgapi.TGClient, engine *engine.Engine) *Poller {
+	poller := &Poller{
+		Client: client,
+		Engine: engine,
 	}
+	go poller.run(ctx)
+	return poller
 }
 
-func (p *Poller) Run() {
+func (p *Poller) run(ctx context.Context) {
 	ticker := time.NewTicker(pollPeriod)
 	for {
 		select {
-		case <-p.stopper:
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
 		}
-		upds, err := p.Client.GetUpdates()
+		upds, err := p.Client.GetUpdates(ctx)
 		if err != nil {
 			fmt.Printf("Error getting updates: %#v\n", err)
 			continue
@@ -42,9 +42,9 @@ func (p *Poller) Run() {
 			var err error
 			switch {
 			case upd.Message != nil:
-				err = p.Engine.Receive(upd.Message)
+				err = p.Engine.Receive(ctx, upd.Message)
 			case upd.CallbackQuery != nil:
-				err = p.Engine.Receive(upd.CallbackQuery)
+				err = p.Engine.Receive(ctx, upd.CallbackQuery)
 			}
 			// TODO process different errors
 			if err != nil {
@@ -52,8 +52,4 @@ func (p *Poller) Run() {
 			}
 		}
 	}
-}
-
-func (p *Poller) Close() {
-	close(p.stopper)
 }

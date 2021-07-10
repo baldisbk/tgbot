@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/baldisbk/tgbot_sample/internal/impl"
@@ -19,13 +19,14 @@ const dbName = "db.sqlite"
 
 func main() {
 	var err error
-	var wg sync.WaitGroup
-	defer wg.Wait()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	tgClient, err := tgapi.NewClient(tgapi.TgApi, tgapi.BotToken)
+	tgClient, err := tgapi.NewClient(ctx, tgapi.TgApi, tgapi.BotToken)
 	if err != nil {
 		fmt.Printf("TG client: %#v", err)
 		os.Exit(1)
@@ -40,19 +41,12 @@ func main() {
 
 	eng := engine.NewEngine(tgClient, cache)
 
-	tim := timer.NewTimer(eng)
-	defer tim.Stop()
+	tim := timer.NewTimer(ctx, eng)
 
 	factory := impl.NewFactory(tgClient, tim)
 	cache.AttachFactory(factory)
 
-	poller := poller.NewPoller(tgClient, eng)
-	wg.Add(1)
-	go func() {
-		poller.Run()
-		wg.Done()
-	}()
-	defer poller.Close()
+	poller.NewPoller(ctx, tgClient, eng)
 
 	<-signals
 }

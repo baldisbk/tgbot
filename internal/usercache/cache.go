@@ -1,6 +1,7 @@
 package usercache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -21,7 +22,7 @@ type cache struct {
 	db      *DB
 }
 
-func (c *cache) Get(user tgapi.User) (pkgcache.User, error) {
+func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error) {
 	if u, ok := c.cache[user]; ok {
 		fmt.Println("\t CACHED USER", user)
 		return u, nil
@@ -45,7 +46,7 @@ func (c *cache) Get(user tgapi.User) (pkgcache.User, error) {
 	}
 }
 
-func (c *cache) Put(tgUser tgapi.User, state pkgcache.User) error {
+func (c *cache) Put(ctx context.Context, tgUser tgapi.User, state pkgcache.User) error {
 	content, err := json.Marshal(state)
 	if err != nil {
 		return xerrors.Errorf("marshal: %w", err)

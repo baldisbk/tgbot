@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"context"
 	"time"
 
 	"github.com/baldisbk/tgbot_sample/pkg/statemachine"
@@ -36,8 +37,8 @@ type User struct {
 }
 
 // probably nothing needed
-func (u *User) UpdateState(interface{}) error { return nil }
-func (u *User) Machine() statemachine.Machine { return u.machine }
+func (u *User) UpdateState(context.Context, interface{}) error { return nil }
+func (u *User) Machine() statemachine.Machine                  { return u.machine }
 
 func (u *User) SetTimer(name string, t time.Time) {
 	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, achievementTimer, t)

@@ -8,7 +8,7 @@ import (
 
 func TestMakeCmd(t *testing.T) {
 	a := assert.New(t)
-	s, err := MakeCmd("http://tg.api", "token:token")
+	s, err := makeCmd("http://tg.api", "token:token")
 	a.NoError(err)
 	a.Equal("http://tg.api/bottoken:token/", s)
 }

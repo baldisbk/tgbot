@@ -1,20 +1,23 @@
 package statemachine
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
-type SMPredicate func(string, interface{}) bool
-type SMCallback func(interface{}) (interface{}, error)
+type SMPredicate func(context.Context, string, interface{}) bool
+type SMCallback func(context.Context, interface{}) (interface{}, error)
 
-func EmptyPredicate(string, interface{}) bool              { return true }
-func NotNilPredicate(state string, input interface{}) bool { return input != nil }
-func EmptyCallback(input interface{}) (interface{}, error) { return input, nil }
+func EmptyPredicate(context.Context, string, interface{}) bool                  { return true }
+func NotNilPredicate(ctx context.Context, state string, input interface{}) bool { return input != nil }
+func EmptyCallback(ctx context.Context, input interface{}) (interface{}, error) { return input, nil }
 
 func CompositeCallback(callbacks ...SMCallback) SMCallback {
-	return func(input interface{}) (interface{}, error) {
+	return func(ctx context.Context, input interface{}) (interface{}, error) {
 		var arg = input
 		var err error
 		for _, callback := range callbacks {
-			arg, err = callback(arg)
+			arg, err = callback(ctx, arg)
 			if err != nil {
 				return arg, err
 			}
@@ -31,7 +34,7 @@ type Transition struct {
 }
 
 type Machine interface {
-	Run(input interface{}) (interface{}, error)
+	Run(ctx context.Context, input interface{}) (interface{}, error)
 }
 
 type sm struct {
@@ -39,7 +42,7 @@ type sm struct {
 	state       string
 }
 
-func (s *sm) Run(input interface{}) (interface{}, error) {
+func (s *sm) Run(ctx context.Context, input interface{}) (interface{}, error) {
 	for {
 		fmt.Printf("State %s, Received %#v\n", s.state, input)
 		trs, ok := s.transitions[s.state]
@@ -50,10 +53,10 @@ func (s *sm) Run(input interface{}) (interface{}, error) {
 		found := false
 		for _, tr := range trs {
 			fmt.Printf("Found transition for %s\n", s.state)
-			if tr.Predicate == nil || tr.Predicate(s.state, input) {
+			if tr.Predicate == nil || tr.Predicate(ctx, s.state, input) {
 				fmt.Printf("Predicate ok\n")
 				if tr.Callback != nil {
-					res, err := tr.Callback(input)
+					res, err := tr.Callback(ctx, input)
 					if err != nil {
 						fmt.Printf("Callback returned error: %#v\n", err)
 						return input, err

@@ -61,6 +61,7 @@ func (u *User) doStart(ctx context.Context, input interface{}) (interface{}, err
 func (u *User) doTimer(ctx context.Context, input interface{}) (interface{}, error) {
 	rsp := input.(*timer.TimerEvent)
 	message := fmt.Sprintf("Time has come to report progress of %s", rsp.Name)
+	u.currentName = rsp.Name
 	return u.ask(ctx, message, []tgapi.InlineKeyboardButton{
 		{Text: "Let's go", CallbackData: reportCallback},
 		{Text: "Later...", CallbackData: postponeCallback},
@@ -251,12 +252,10 @@ func (u *User) doFinishAdd(ctx context.Context, input interface{}) (interface{},
 }
 
 func (u *User) doReport(ctx context.Context, input interface{}) (interface{}, error) {
-	timer := input.(*timer.TimerEvent)
-	message := fmt.Sprintf("Okay, now would you enter current state of %s", timer.Name)
+	message := fmt.Sprintf("Okay, now would you enter current state of %s", u.currentName)
 	if _, err := u.tgClient.SendMessage(ctx, u.Id, message); err != nil {
 		return nil, xerrors.Errorf("send: %w", err)
 	}
-	u.currentName = timer.Name
 	return nil, nil
 }
 

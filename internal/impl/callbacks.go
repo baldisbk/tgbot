@@ -41,6 +41,11 @@ func (u *User) doNoUnderstand(ctx context.Context, input interface{}) (interface
 	return nil, nil
 }
 
+func (u *User) doTimeout(ctx context.Context, input interface{}) (interface{}, error) {
+	u.SetTimeout()
+	return input, nil
+}
+
 func (u *User) doStart(ctx context.Context, input interface{}) (interface{}, error) {
 	// drop state to defaults
 	names, _ := u.getNames()

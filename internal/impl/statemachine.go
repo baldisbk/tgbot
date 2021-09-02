@@ -17,6 +17,11 @@ func (u *User) DontUnderstand(state string) statemachine.Transition {
 	}
 }
 
+func (u *User) timed(callbacks ...statemachine.SMCallback) statemachine.SMCallback {
+	cbs := append([]statemachine.SMCallback{u.doTimeout}, callbacks...)
+	return statemachine.CompositeCallback(cbs...)
+}
+
 func makeTransitions(res *User) []statemachine.Transition {
 	return []statemachine.Transition{
 		// from initial
@@ -26,23 +31,28 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Predicate:   res.isStart,
 			Callback:    res.doStart,
 		},
+		{ // rollback - just do nothing
+			Source:      startState,
+			Destination: startState,
+			Predicate:   res.isRollback,
+		},
 		{
 			Source:      startState,
 			Destination: timerState,
 			Predicate:   res.isTimer,
-			Callback:    res.doTimer,
+			Callback:    res.timed(res.doTimer),
 		},
 		{
 			Source:      startState,
 			Destination: listState,
 			Predicate:   checkCallback(listCallback),
-			Callback:    res.doList,
+			Callback:    res.timed(res.doList),
 		},
 		{
 			Source:      startState,
 			Destination: addState,
 			Predicate:   checkCallback(addCallback),
-			Callback:    res.doStartAdd,
+			Callback:    res.timed(res.doStartAdd),
 		},
 		res.DontUnderstand(startState),
 
@@ -57,7 +67,7 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Source:      timerState,
 			Destination: reportState,
 			Predicate:   checkCallback(reportCallback),
-			Callback:    res.doReport,
+			Callback:    res.timed(res.doReport),
 		},
 		{
 			Source:      timerState,
@@ -79,12 +89,13 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Source:      listState,
 			Destination: listState,
 			Predicate:   checkCallback(forwardListCallback),
-			Callback:    res.doListForward,
+			Callback:    res.timed(res.doListForward),
 		},
 		{
-			Source: listState, Destination: listState,
-			Predicate: checkCallback(backwardListCallback),
-			Callback:  res.doListBackward,
+			Source:      listState,
+			Destination: listState,
+			Predicate:   checkCallback(backwardListCallback),
+			Callback:    res.timed(res.doListBackward),
 		},
 		{
 			Source:      listState,
@@ -96,7 +107,7 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Source:      listState,
 			Destination: displayState,
 			Predicate:   res.isDisplay,
-			Callback:    res.doDisplay,
+			Callback:    res.timed(res.doDisplay),
 		},
 		res.DontUnderstand(listState),
 
@@ -111,13 +122,13 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Source:      displayState,
 			Destination: listState,
 			Predicate:   checkCallback(listCallback),
-			Callback:    res.doList,
+			Callback:    res.timed(res.doList),
 		},
 		{
 			Source:      displayState,
 			Destination: startState,
 			Predicate:   checkCallback(stopListCallback),
-			Callback:    res.doStart,
+			Callback:    res.timed(res.doStart),
 		},
 		res.DontUnderstand(displayState),
 
@@ -138,7 +149,7 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Source:      addState,
 			Destination: addState,
 			Predicate:   checkCallback(retryCallback),
-			Callback:    res.doAdd,
+			Callback:    res.timed(res.doAdd),
 		},
 		{
 			Source:      addState,
@@ -150,13 +161,13 @@ func makeTransitions(res *User) []statemachine.Transition {
 			Source:      addState,
 			Destination: addState,
 			Predicate:   res.isValidInput,
-			Callback:    res.doAdd,
+			Callback:    res.timed(res.doAdd),
 		},
 		res.DontUnderstand(addState),
 
 		// from report
 		{ // rollback - auto postpone
-			Source:      addState,
+			Source:      reportState,
 			Destination: startState,
 			Predicate:   res.isRollback,
 			Callback:    statemachine.CompositeCallback(res.doPostpone, res.doStart),

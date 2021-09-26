@@ -1,6 +1,8 @@
 package impl
 
 import (
+	"time"
+
 	"github.com/baldisbk/tgbot_sample/pkg/statemachine"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 	"github.com/baldisbk/tgbot_sample/pkg/timer"
@@ -9,10 +11,16 @@ import (
 type userFactory struct {
 	tgClient *tgapi.TGClient
 	timer    *timer.Timer
+
+	config Config
 }
 
-func NewFactory(tgClient *tgapi.TGClient, timer *timer.Timer) *userFactory {
-	return &userFactory{tgClient: tgClient, timer: timer}
+type Config struct {
+	DialogTimeout time.Duration `yaml:"dialog_timeout"`
+}
+
+func NewFactory(cfg Config, tgClient *tgapi.TGClient, timer *timer.Timer) *userFactory {
+	return &userFactory{config: cfg, tgClient: tgClient, timer: timer}
 }
 
 func (f *userFactory) MakeUser(u tgapi.User) *User {
@@ -25,6 +33,8 @@ func (f *userFactory) MakeUser(u tgapi.User) *User {
 
 		tgClient: f.tgClient,
 		timer:    f.timer,
+
+		dialogTimeout: f.config.DialogTimeout,
 	}
 	res.machine = statemachine.NewSM(startState, makeTransitions(res))
 	return res

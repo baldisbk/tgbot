@@ -14,13 +14,14 @@ const (
 	timeoutTimer     = "timeout"
 )
 
-const interactionTimeout = 10 * time.Minute
-
 type User struct {
 	Id      uint64
 	Name    string
 	Limits  map[string]*LimitAchievement
 	Strikes map[string]*StrikeAchievement
+
+	// settings
+	dialogTimeout time.Duration
 
 	// internals
 	tgClient *tgapi.TGClient
@@ -31,9 +32,7 @@ type User struct {
 	currentName string
 	lastMessage uint64
 	stageNumber int
-
-	// add limit
-	newLimit *LimitAchievement
+	newLimit    *LimitAchievement // add limit
 }
 
 // probably nothing needed
@@ -45,7 +44,7 @@ func (u *User) SetTimer(name string, t time.Time) {
 }
 func (u *User) SetTimeout() {
 	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name},
-		"timeout", achievementTimer, time.Now().Add(interactionTimeout))
+		"timeout", achievementTimer, time.Now().Add(u.dialogTimeout))
 }
 
 func (u *User) Wake() {

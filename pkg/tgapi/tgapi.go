@@ -4,17 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
 
+	"github.com/baldisbk/tgbot_sample/pkg/logging"
 	"golang.org/x/xerrors"
 )
 
-const BotToken = "1607353956:AAGbM0Sp4d56fXK6zbBm9o252PRO9ON-gx4"
-const TgApi = "https://api.telegram.org/"
 const (
 	TestCmd    = "getMe"
 	SendCmd    = "sendMessage"
@@ -22,6 +20,11 @@ const (
 	AnswerCmd  = "answerCallbackQuery"
 	EditCmd    = "editMessageText"
 )
+
+type Config struct {
+	Address string `yaml:"address"`
+	Token   string `yaml:"token"`
+}
 
 // ======== Incoming updates ========
 
@@ -164,9 +167,9 @@ func makeCmd(address, token string) (string, error) {
 	return u.String() + "/", nil
 }
 
-func NewClient(ctx context.Context, url string, token string) (*TGClient, error) {
+func NewClient(ctx context.Context, cfg Config) (*TGClient, error) {
 	cli := &TGClient{client: &http.Client{}}
-	path, err := makeCmd(url, token)
+	path, err := makeCmd(cfg.Address, cfg.Token)
 	if err != nil {
 		return nil, xerrors.Errorf("make url: %w", err)
 	}
@@ -196,7 +199,8 @@ func (c *TGClient) request(ctx context.Context, httpmethod, apimethod string, in
 		return xerrors.Errorf("make req: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/json")
-	fmt.Printf("\t HTTP REQ: %s, %s, %s\n", req.URL.String(), req.Method, string(body))
+	// TODO middleware
+	logging.S(ctx).Debugf("HTTP REQ: %s, %s, %s", req.URL.String(), req.Method, string(body))
 	rsp, err := c.client.Do(req)
 	if err != nil {
 		return xerrors.Errorf("request: %w", err)
@@ -208,7 +212,7 @@ func (c *TGClient) request(ctx context.Context, httpmethod, apimethod string, in
 	if err != nil {
 		return xerrors.Errorf("read rsp: %w", err)
 	}
-	fmt.Printf("\t HTTP RSP: %s\n", string(body))
+	logging.S(ctx).Debugf("HTTP RSP: %s", string(body))
 	if output == nil {
 		return nil
 	}

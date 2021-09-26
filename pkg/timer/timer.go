@@ -13,7 +13,9 @@ import (
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
 
-const tickerPeriod = time.Second
+type Config struct {
+	Period time.Duration `yaml:"period"`
+}
 
 type timerKey struct {
 	Type string
@@ -42,8 +44,8 @@ type Timer struct {
 	ticker clockwork.Ticker
 }
 
-func NewTimer(ctx context.Context, eng *engine.Engine) *Timer {
-	return newTimer(ctx, eng, clockwork.NewRealClock().NewTicker(tickerPeriod))
+func NewTimer(ctx context.Context, cfg Config, eng *engine.Engine) *Timer {
+	return newTimer(ctx, eng, clockwork.NewRealClock().NewTicker(cfg.Period))
 }
 
 func NewFakeTimer(ctx context.Context, eng *engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {

@@ -2,31 +2,36 @@ package poller
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/baldisbk/tgbot_sample/pkg/engine"
+	"github.com/baldisbk/tgbot_sample/pkg/logging"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
-
-const pollPeriod = time.Second
 
 type Poller struct {
 	Client *tgapi.TGClient
 	Engine *engine.Engine
+
+	config Config
 }
 
-func NewPoller(ctx context.Context, client *tgapi.TGClient, engine *engine.Engine) *Poller {
+type Config struct {
+	PollPeriod time.Duration `yaml:"period"`
+}
+
+func NewPoller(ctx context.Context, cfg Config, client *tgapi.TGClient, engine *engine.Engine) *Poller {
 	poller := &Poller{
 		Client: client,
 		Engine: engine,
+		config: cfg,
 	}
 	go poller.run(ctx)
 	return poller
 }
 
 func (p *Poller) run(ctx context.Context) {
-	ticker := time.NewTicker(pollPeriod)
+	ticker := time.NewTicker(p.config.PollPeriod)
 	for {
 		select {
 		case <-ctx.Done():
@@ -35,7 +40,7 @@ func (p *Poller) run(ctx context.Context) {
 		}
 		upds, err := p.Client.GetUpdates(ctx)
 		if err != nil {
-			fmt.Printf("Error getting updates: %#v\n", err)
+			logging.S(ctx).Errorf("Error getting updates: %#v", err)
 			continue
 		}
 		for _, upd := range upds {
@@ -48,7 +53,7 @@ func (p *Poller) run(ctx context.Context) {
 			}
 			// TODO process different errors
 			if err != nil {
-				fmt.Printf("Error processing update (%#v): %#v\n", upd, err)
+				logging.S(ctx).Errorf("Error processing update (%#v): %#v", upd, err)
 			}
 		}
 	}

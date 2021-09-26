@@ -2,7 +2,8 @@ package statemachine
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/baldisbk/tgbot_sample/pkg/logging"
 )
 
 type SMPredicate func(context.Context, string, interface{}) bool
@@ -44,27 +45,28 @@ type sm struct {
 
 func (s *sm) Run(ctx context.Context, input interface{}) (interface{}, error) {
 	for {
-		fmt.Printf("State %s, Received %#v\n", s.state, input)
+		stateCtx := logging.WithTag(ctx, "STATE", s.state)
+		logging.S(stateCtx).Infof("Received input %#v", input)
 		trs, ok := s.transitions[s.state]
 		if !ok {
-			fmt.Printf("No transitions found for %s\n", s.state)
+			logging.S(stateCtx).Debugf("No transitions found")
 			return input, nil
 		}
 		found := false
 		for _, tr := range trs {
-			fmt.Printf("Found transition for %s\n", s.state)
+			logging.S(stateCtx).Debugf("Found transition")
 			if tr.Predicate == nil || tr.Predicate(ctx, s.state, input) {
-				fmt.Printf("Predicate ok\n")
+				logging.S(stateCtx).Debugf("Predicate ok")
 				if tr.Callback != nil {
 					res, err := tr.Callback(ctx, input)
 					if err != nil {
-						fmt.Printf("Callback returned error: %#v\n", err)
+						logging.S(stateCtx).Warnf("Callback returned error: %#v", err)
 						return input, err
 					}
-					fmt.Printf("Callback returned result: %#v\n", res)
+					logging.S(stateCtx).Infof("Callback returned result: %#v", res)
 					input = res
 				} else {
-					fmt.Printf("No callback\n")
+					logging.S(stateCtx).Debugf("No callback")
 				}
 				found = true
 				s.state = tr.Destination
@@ -72,10 +74,10 @@ func (s *sm) Run(ctx context.Context, input interface{}) (interface{}, error) {
 			}
 		}
 		if !found {
-			fmt.Printf("None found, stop\n")
+			logging.S(stateCtx).Debugf("No relevant transitions found, stop")
 			return input, nil
 		}
-		fmt.Printf("New state is %s\n", s.state)
+		logging.S(stateCtx).Debugf("Switch to state %s", s.state)
 	}
 }
 

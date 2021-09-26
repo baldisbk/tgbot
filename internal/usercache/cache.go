@@ -3,11 +3,12 @@ package usercache
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/baldisbk/tgbot_sample/internal/impl"
+	"github.com/baldisbk/tgbot_sample/pkg/logging"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 	pkgcache "github.com/baldisbk/tgbot_sample/pkg/usercache"
+
 	"golang.org/x/xerrors"
 )
 
@@ -24,7 +25,7 @@ type cache struct {
 
 func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error) {
 	if u, ok := c.cache[user.Id]; ok {
-		fmt.Println("\t CACHED USER", user, u)
+		logging.S(ctx).Debugf("Cached user %v %v", user, u)
 		return u, nil
 	} else {
 		u := c.factory.MakeUser(user)
@@ -33,15 +34,15 @@ func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error)
 			if err != noRowsError {
 				return nil, xerrors.Errorf("get: %w", err)
 			}
-			fmt.Println("\t NEW USER", user)
+			logging.S(ctx).Debugf("New user %v", user)
 		} else {
-			fmt.Println("\t STORED USER", user)
+			logging.S(ctx).Debugf("DB user %v", user)
 			if err := json.Unmarshal([]byte(stored.Contents), u); err != nil {
 				return nil, xerrors.Errorf("umarshal: %w", err)
 			}
 		}
 		u.Wake()
-		fmt.Println("\t SAVE USER", user, u)
+		logging.S(ctx).Debugf("Store user %v", user, u)
 		c.cache[user.Id] = u
 		return u, nil
 	}
@@ -77,7 +78,7 @@ func (c *cache) AttachFactory(factory UserFactory) {
 }
 
 type Config struct {
-	Filename string
+	Filename string `yaml:"database"`
 }
 
 func NewCache(cfg Config) (*cache, error) {

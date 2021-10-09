@@ -19,9 +19,13 @@ var develPath = "config.yaml"
 var configPath = flag.String("config", "", "path to config")
 var develMode = flag.Bool("devel", false, "development mode")
 
-type Config struct {
+type ConfigFlags struct {
 	Path  string `yaml:"-"`
 	Devel bool   `yaml:"-"`
+}
+
+type Config struct {
+	ConfigFlags
 
 	CacheConfig   usercache.Config `yaml:"user_cache"`
 	FactoryConfig impl.Config      `yaml:"user_factory"`
@@ -30,27 +34,36 @@ type Config struct {
 	ApiConfig     tgapi.Config     `yaml:"tgapi"`
 }
 
-func ParseConfig() (*Config, error) {
+func ParseCustomConfig(config interface{}) (*ConfigFlags, error) {
 	flag.Parse()
 
-	config := Config{
+	flags := ConfigFlags{
 		Devel: *develMode,
 		Path:  *configPath,
 	}
-	if config.Path == "" {
-		if config.Devel {
-			config.Path = develPath
+	if flags.Path == "" {
+		if flags.Devel {
+			flags.Path = develPath
 		} else {
-			config.Path = defaultPath
+			flags.Path = defaultPath
 		}
 	}
-	contents, err := ioutil.ReadFile(config.Path)
+	contents, err := ioutil.ReadFile(flags.Path)
 	if err != nil {
 		return nil, xerrors.Errorf("read config: %w", err)
 	}
-	if err := yaml.Unmarshal(contents, &config); err != nil {
+	if err := yaml.Unmarshal(contents, config); err != nil {
 		return nil, xerrors.Errorf("parse config: %w", err)
 	}
+	return &flags, nil
+}
 
-	return &config, nil
+func ParseConfig() (*Config, error) {
+	var cfg Config
+	flags, err := ParseCustomConfig(&cfg)
+	if err != nil {
+		return nil, err
+	}
+	cfg.ConfigFlags = *flags
+	return &cfg, nil
 }

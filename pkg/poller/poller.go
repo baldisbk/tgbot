@@ -30,6 +30,8 @@ func NewPoller(ctx context.Context, cfg Config, client *tgapi.TGClient, engine *
 	return poller
 }
 
+func (p *Poller) Shutdown() {}
+
 func (p *Poller) run(ctx context.Context) {
 	ticker := time.NewTicker(p.config.PollPeriod)
 	for {

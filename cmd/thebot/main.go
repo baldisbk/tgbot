@@ -60,7 +60,8 @@ func main() {
 	factory := impl.NewFactory(config.FactoryConfig, tgClient, tim)
 	cache.AttachFactory(factory)
 
-	poller.NewPoller(ctx, config.PollerConfig, tgClient, eng)
+	poll := poller.NewPoller(ctx, config.PollerConfig, tgClient, eng)
+	defer poll.Shutdown()
 
 	<-signals
 }

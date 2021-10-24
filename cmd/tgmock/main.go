@@ -3,22 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
-	"net/http"
 	"os"
 
 	"github.com/baldisbk/tgbot_sample/internal/config"
 	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
-
-type Config struct {
-	config.ConfigFlags
-
-	Address string `yaml:"address"`
-}
 
 func main() {
 	var err error
@@ -47,23 +37,7 @@ func main() {
 	}
 	cfg.ConfigFlags = *flags
 
-	srv := Server{}
-
-	mx := mux.NewRouter()
-	mx.HandleFunc("/{token}/"+tgapi.ReceiveCmd, srv.update)
-	mx.HandleFunc("/{token}/"+tgapi.SendCmd, srv.message)
-	mx.HandleFunc("/{token}/"+tgapi.AnswerCmd, srv.callback)
-	mx.HandleFunc("/{token}/"+tgapi.EditCmd, srv.message)
-
-	mx.NotFoundHandler = http.HandlerFunc(srv.dflt)
-
-	server := http.Server{
-		Addr:        cfg.Address,
-		Handler:     mx,
-		BaseContext: func(net.Listener) context.Context { return ctx },
-	}
-
-	err = server.ListenAndServe()
+	err = NewServer(ctx, cfg).ListenAndServe()
 	if err != nil {
 		logging.S(ctx).Errorf("serve error: %s", err)
 		os.Exit(1)

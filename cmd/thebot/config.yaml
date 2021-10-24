@@ -1,6 +1,7 @@
 tgapi:
-  address: "https://api.telegram.org/"
+  address: "http://localhost:1234/"
   token: "1607353956:AAGbM0Sp4d56fXK6zbBm9o252PRO9ON-gx4"
+        #  address: "https://api.telegram.org/"
 
 user_cache:
   database: "db.sqlite"

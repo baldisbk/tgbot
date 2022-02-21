@@ -11,7 +11,7 @@ import (
 )
 
 type Engine struct {
-	client *tgapi.TGClient
+	client tgapi.TGClient
 	users  map[uint64]usercache.User
 	cache  usercache.UserCache
 }
@@ -19,11 +19,11 @@ type Engine struct {
 type Signal interface {
 	User() tgapi.User
 	Message() interface{}
-	PreProcess(ctx context.Context, client *tgapi.TGClient) error
-	PostProcess(ctx context.Context, client *tgapi.TGClient) error
+	PreProcess(ctx context.Context, client tgapi.TGClient) error
+	PostProcess(ctx context.Context, client tgapi.TGClient) error
 }
 
-func NewEngine(client *tgapi.TGClient, cache usercache.UserCache) *Engine {
+func NewEngine(client tgapi.TGClient, cache usercache.UserCache) *Engine {
 	return &Engine{
 		users:  map[uint64]usercache.User{},
 		cache:  cache,

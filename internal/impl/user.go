@@ -24,7 +24,7 @@ type User struct {
 	dialogTimeout time.Duration
 
 	// internals
-	tgClient *tgapi.TGClient
+	tgClient tgapi.TGClient
 	timer    *timer.Timer
 	machine  statemachine.Machine
 

@@ -8,7 +8,7 @@ import (
 )
 
 type User interface {
-	UpdateState(context.Context,interface{}) error
+	UpdateState(context.Context, interface{}) error
 	Machine() statemachine.Machine
 }
 

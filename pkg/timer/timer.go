@@ -31,10 +31,10 @@ type TimerEvent struct {
 
 func (t *TimerEvent) key() timerKey { return timerKey{Type: t.Type, Name: t.Name} }
 
-func (t *TimerEvent) User() tgapi.User                                              { return t.Receiver }
-func (t *TimerEvent) Message() interface{}                                          { return t }
-func (t *TimerEvent) PreProcess(ctx context.Context, client *tgapi.TGClient) error  { return nil }
-func (t *TimerEvent) PostProcess(ctx context.Context, client *tgapi.TGClient) error { return nil }
+func (t *TimerEvent) User() tgapi.User                                             { return t.Receiver }
+func (t *TimerEvent) Message() interface{}                                         { return t }
+func (t *TimerEvent) PreProcess(ctx context.Context, client tgapi.TGClient) error  { return nil }
+func (t *TimerEvent) PostProcess(ctx context.Context, client tgapi.TGClient) error { return nil }
 
 type Timer struct {
 	mx     sync.Mutex

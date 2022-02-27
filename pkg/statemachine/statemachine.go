@@ -27,6 +27,12 @@ func CompositeCallback(callbacks ...SMCallback) SMCallback {
 	}
 }
 
+func ConstCallback(output interface{}) SMCallback {
+	return func(ctx context.Context, input interface{}) (interface{}, error) {
+		return output, nil
+	}
+}
+
 type Transition struct {
 	Source      string
 	Destination string
@@ -81,7 +87,7 @@ func (s *sm) Run(ctx context.Context, input interface{}) (interface{}, error) {
 	}
 }
 
-func NewSM(state string, trs []Transition) Machine {
+func NewSM(state string, trs []Transition) *sm {
 	sm := &sm{
 		state:       state,
 		transitions: map[string][]Transition{},

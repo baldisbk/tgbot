@@ -31,10 +31,10 @@ type TimerEvent struct {
 
 func (t *TimerEvent) key() timerKey { return timerKey{Type: t.Type, Name: t.Name} }
 
-func (t *TimerEvent) User() tgapi.User                                              { return t.Receiver }
-func (t *TimerEvent) Message() interface{}                                          { return t }
-func (t *TimerEvent) PreProcess(ctx context.Context, client *tgapi.TGClient) error  { return nil }
-func (t *TimerEvent) PostProcess(ctx context.Context, client *tgapi.TGClient) error { return nil }
+func (t *TimerEvent) User() tgapi.User                                             { return t.Receiver }
+func (t *TimerEvent) Message() interface{}                                         { return t }
+func (t *TimerEvent) PreProcess(ctx context.Context, client tgapi.TGClient) error  { return nil }
+func (t *TimerEvent) PostProcess(ctx context.Context, client tgapi.TGClient) error { return nil }
 
 type Timer struct {
 	mx     sync.Mutex
@@ -44,15 +44,15 @@ type Timer struct {
 	ticker clockwork.Ticker
 }
 
-func NewTimer(ctx context.Context, cfg Config, eng *engine.Engine) *Timer {
+func NewTimer(ctx context.Context, cfg Config, eng engine.Engine) *Timer {
 	return newTimer(ctx, eng, clockwork.NewRealClock().NewTicker(cfg.Period))
 }
 
-func NewFakeTimer(ctx context.Context, eng *engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
+func NewFakeTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
 	return newTimer(ctx, eng, clock.NewTicker(period))
 }
 
-func newTimer(ctx context.Context, eng *engine.Engine, ticker clockwork.Ticker) *Timer {
+func newTimer(ctx context.Context, eng engine.Engine, ticker clockwork.Ticker) *Timer {
 	res := &Timer{
 		events: map[tgapi.User]map[timerKey]time.Time{},
 		ticker: ticker,

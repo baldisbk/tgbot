@@ -10,8 +10,8 @@ import (
 )
 
 type Poller struct {
-	Client *tgapi.TGClient
-	Engine *engine.Engine
+	Client tgapi.TGClient
+	Engine engine.Engine
 
 	config Config
 }
@@ -20,7 +20,7 @@ type Config struct {
 	PollPeriod time.Duration `yaml:"period"`
 }
 
-func NewPoller(ctx context.Context, cfg Config, client *tgapi.TGClient, engine *engine.Engine) *Poller {
+func NewPoller(ctx context.Context, cfg Config, client tgapi.TGClient, engine engine.Engine) *Poller {
 	poller := &Poller{
 		Client: client,
 		Engine: engine,

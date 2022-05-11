@@ -24,7 +24,7 @@ type User struct {
 	dialogTimeout time.Duration
 
 	// internals
-	tgClient *tgapi.TGClient
+	tgClient tgapi.TGClient
 	timer    *timer.Timer
 	machine  statemachine.Machine
 
@@ -37,7 +37,9 @@ type User struct {
 
 // probably nothing needed
 func (u *User) UpdateState(context.Context, interface{}) error { return nil }
-func (u *User) Machine() statemachine.Machine                  { return u.machine }
+func (u *User) Run(ctx context.Context, input interface{}) (interface{}, error) {
+	return u.machine.Run(ctx, input)
+}
 
 func (u *User) SetTimer(name string, t time.Time) {
 	u.timer.SetAlarm(tgapi.User{Id: u.Id, FirstName: u.Name}, name, achievementTimer, t)

@@ -3,13 +3,12 @@ package usercache
 import (
 	"context"
 
-	"github.com/baldisbk/tgbot_sample/pkg/statemachine"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
 
 type User interface {
-	UpdateState(context.Context,interface{}) error
-	Machine() statemachine.Machine
+	UpdateState(context.Context, interface{}) error
+	Run(ctx context.Context, input interface{}) (interface{}, error)
 }
 
 type UserCache interface {

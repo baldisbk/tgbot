@@ -9,7 +9,7 @@ import (
 )
 
 type userFactory struct {
-	tgClient *tgapi.TGClient
+	tgClient tgapi.TGClient
 	timer    *timer.Timer
 
 	config Config
@@ -19,7 +19,7 @@ type Config struct {
 	DialogTimeout time.Duration `yaml:"dialog_timeout"`
 }
 
-func NewFactory(cfg Config, tgClient *tgapi.TGClient, timer *timer.Timer) *userFactory {
+func NewFactory(cfg Config, tgClient tgapi.TGClient, timer *timer.Timer) *userFactory {
 	return &userFactory{config: cfg, tgClient: tgClient, timer: timer}
 }
 

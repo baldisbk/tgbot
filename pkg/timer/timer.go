@@ -41,21 +41,28 @@ type Timer struct {
 	events map[tgapi.User]map[timerKey]time.Time
 	queue  []*TimerEvent
 
-	ticker clockwork.Ticker
+	clock    clockwork.Clock
+	testSync sync.WaitGroup
 }
 
 func NewTimer(ctx context.Context, cfg Config, eng engine.Engine) *Timer {
-	return newTimer(ctx, eng, clockwork.NewRealClock().NewTicker(cfg.Period))
+	return newTimer(ctx, eng, clockwork.NewRealClock(), cfg.Period)
 }
 
-func NewFakeTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
-	return newTimer(ctx, eng, clock.NewTicker(period))
+// warning: use this, not clock.Advance
+func (t *Timer) advance(d time.Duration) {
+	if c, ok := t.clock.(clockwork.FakeClock); ok {
+		t.testSync.Add(1)
+		c.Advance(d)
+		t.testSync.Wait()
+	}
 }
 
-func newTimer(ctx context.Context, eng engine.Engine, ticker clockwork.Ticker) *Timer {
+func newTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
+	ticker := clock.NewTicker(period)
 	res := &Timer{
 		events: map[tgapi.User]map[timerKey]time.Time{},
-		ticker: ticker,
+		clock:  clock,
 	}
 	go func() {
 		for {
@@ -63,25 +70,37 @@ func newTimer(ctx context.Context, eng engine.Engine, ticker clockwork.Ticker) *
 			case <-ctx.Done():
 				ticker.Stop()
 				return
-			case <-res.ticker.Chan():
-				now := time.Now()
+			case <-ticker.Chan():
+				now := clock.Now()
 				res.mx.Lock()
 				i := sort.Search(len(res.queue), func(i int) bool { return res.queue[i].Time.After(now) })
 				process := res.queue[:i]
 				res.queue = res.queue[i:]
 				res.mx.Unlock()
+
+				var wg sync.WaitGroup
+				wg.Add(len(process))
 				for _, event := range process {
-					err := eng.Receive(ctx, event)
-					if xerrors.Is(err, engine.BadStateError) || xerrors.Is(err, engine.RetriableError) {
-						// retry it next time
+					go func(event *TimerEvent) {
+						err := eng.Receive(ctx, event)
 						res.mx.Lock()
-						res.queue = append(res.queue, event)
-						res.mx.Unlock()
-						continue
-					}
-					res.mx.Lock()
-					delete(res.events[event.Receiver], event.key())
-					res.mx.Unlock()
+						defer res.mx.Unlock()
+						defer wg.Done()
+						switch {
+						case xerrors.Is(err, engine.BadStateError),
+							xerrors.Is(err, engine.RetriableError):
+							// retry it next time
+							res.queue = append(res.queue, event)
+						case err != nil:
+							// TODO: process it somehow
+						default:
+							delete(res.events[event.Receiver], event.key())
+						}
+					}(event)
+				}
+				wg.Wait()
+				if _, ok := res.clock.(clockwork.FakeClock); ok {
+					res.testSync.Done()
 				}
 			}
 		}
@@ -96,15 +115,17 @@ func (t *Timer) SetAlarm(user tgapi.User, name string, typ string, at time.Time)
 	if _, ok := t.events[user]; !ok {
 		t.events[user] = map[timerKey]time.Time{}
 	}
-	if old, ok := t.events[user][timerKey{typ, name}]; ok {
+	key := timerKey{typ, name}
+	if old, ok := t.events[user][key]; ok {
 		if old.Equal(at) {
 			return
 		}
 		// replace
-		t.events[user][timerKey{typ, name}] = at
+		t.events[user][key] = at
 		i := sort.Search(len(t.queue), func(i int) bool { return !t.queue[i].Time.Before(old) })
 		t.queue[i].Time = at
 	} else {
+		t.events[user][key] = at
 		t.queue = append(t.queue, &TimerEvent{Name: name, Type: typ, Receiver: user, Time: at})
 	}
 	sort.Slice(t.queue, func(i, j int) bool { return t.queue[i].Time.Before(t.queue[i].Time) })

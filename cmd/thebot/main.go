@@ -22,7 +22,6 @@ func main() {
 	var err error
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -64,4 +63,5 @@ func main() {
 	defer poll.Shutdown()
 
 	<-signals
+	cancel()
 }

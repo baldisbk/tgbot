@@ -2,7 +2,10 @@ package poller
 
 import (
 	"context"
+	"sync"
 	"time"
+
+	"github.com/jonboulle/clockwork"
 
 	"github.com/baldisbk/tgbot_sample/pkg/engine"
 	"github.com/baldisbk/tgbot_sample/pkg/logging"
@@ -14,6 +17,9 @@ type Poller struct {
 	Engine engine.Engine
 
 	config Config
+	clock  clockwork.Clock
+
+	wg sync.WaitGroup
 }
 
 type Config struct {
@@ -21,24 +27,32 @@ type Config struct {
 }
 
 func NewPoller(ctx context.Context, cfg Config, client tgapi.TGClient, engine engine.Engine) *Poller {
+	return newPoller(ctx, cfg, clockwork.NewRealClock(), client, engine)
+}
+
+func newPoller(ctx context.Context, cfg Config, clock clockwork.Clock,
+	client tgapi.TGClient, engine engine.Engine) *Poller {
 	poller := &Poller{
 		Client: client,
 		Engine: engine,
 		config: cfg,
+		clock:  clock,
 	}
+	poller.wg.Add(1)
 	go poller.run(ctx)
 	return poller
 }
 
-func (p *Poller) Shutdown() {}
+func (p *Poller) Shutdown() { p.wg.Wait() }
 
 func (p *Poller) run(ctx context.Context) {
-	ticker := time.NewTicker(p.config.PollPeriod)
+	ticker := p.clock.NewTicker(p.config.PollPeriod)
+	defer p.wg.Done()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
+		case <-ticker.Chan():
 		}
 		upds, err := p.Client.GetUpdates(ctx)
 		if err != nil {

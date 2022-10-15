@@ -2,6 +2,7 @@ package statemachine
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,6 +10,12 @@ import (
 )
 
 var testError = xerrors.New("test error")
+
+func concatCallback(append string) SMCallback {
+	return func(c context.Context, i interface{}) (interface{}, error) {
+		return fmt.Sprint(i, append), nil
+	}
+}
 
 func TestSM(t *testing.T) {
 	testCases := []struct {
@@ -41,6 +48,22 @@ func TestSM(t *testing.T) {
 			finalState: "finish",
 			input:      "A",
 			output:     "B",
+		},
+		{
+			desc: "composite",
+			transitions: []Transition{{
+				Source:      "start",
+				Destination: "finish",
+				Predicate:   EmptyPredicate,
+				Callback: CompositeCallback(
+					ConstCallback("B"),
+					concatCallback("C"),
+				),
+			}},
+			startState: "start",
+			finalState: "finish",
+			input:      "A",
+			output:     "BC",
 		},
 		{
 			desc: "first served",

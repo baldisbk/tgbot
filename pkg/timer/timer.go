@@ -42,11 +42,16 @@ type Timer struct {
 	queue  []*TimerEvent
 
 	clock    clockwork.Clock
+	wg       sync.WaitGroup
 	testSync sync.WaitGroup
 }
 
 func NewTimer(ctx context.Context, cfg Config, eng engine.Engine) *Timer {
 	return newTimer(ctx, eng, clockwork.NewRealClock(), cfg.Period)
+}
+
+func (t *Timer) Shutdown() {
+	t.wg.Wait()
 }
 
 // warning: use this, not clock.Advance
@@ -64,11 +69,13 @@ func newTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, per
 		events: map[tgapi.User]map[timerKey]time.Time{},
 		clock:  clock,
 	}
+	res.wg.Add(1)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				ticker.Stop()
+				res.wg.Done()
 				return
 			case <-ticker.Chan():
 				now := clock.Now()

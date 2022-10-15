@@ -55,6 +55,7 @@ func main() {
 	eng := engine.NewEngine(tgClient, cache)
 
 	tim := timer.NewTimer(ctx, config.TimerConfig, eng)
+	defer tim.Shutdown()
 
 	factory := impl.NewFactory(config.FactoryConfig, tgClient, tim)
 	cache.AttachFactory(factory)

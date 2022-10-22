@@ -96,6 +96,7 @@ func (c *tgClient) GetUpdates(ctx context.Context) ([]Update, error) {
 		if c.offset <= r.UpdateId {
 			c.offset = r.UpdateId + 1
 		}
+		hash(r)
 	}
 	return res.Result, nil
 }

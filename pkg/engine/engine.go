@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/baldisbk/tgbot_sample/pkg/logging"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
@@ -35,6 +36,7 @@ func NewEngine(client tgapi.TGClient, cache usercache.UserCache) *engine {
 
 func (e *engine) Receive(ctx context.Context, signal Signal) error {
 	tgUser := signal.User()
+	ctx = logging.WithTag(ctx, "USER", strconv.FormatUint(tgUser.Id, 16))
 	var err error
 	var user usercache.User
 	if user, err = e.cache.Get(ctx, tgUser); err != nil {

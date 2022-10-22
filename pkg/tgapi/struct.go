@@ -22,6 +22,8 @@ type Message struct {
 	Chat      Chat   `json:"chat"`
 	Date      uint64 `json:"date"`
 	Text      string `json:"text"`
+
+	UUID string `json:"-"`
 }
 
 func (m *Message) User() User                                             { return m.From }
@@ -34,6 +36,8 @@ type CallbackQuery struct {
 	From         User   `json:"from"`
 	ChatInstance string `json:"chat_instance"`
 	Data         string `json:"data"`
+
+	UUID string `json:"-"`
 }
 
 func (m *CallbackQuery) User() User           { return m.From }

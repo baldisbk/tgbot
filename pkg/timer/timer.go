@@ -6,10 +6,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jonboulle/clockwork"
 	"golang.org/x/xerrors"
 
 	"github.com/baldisbk/tgbot_sample/pkg/engine"
+	"github.com/baldisbk/tgbot_sample/pkg/logging"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 )
 
@@ -23,6 +25,7 @@ type timerKey struct {
 }
 
 type TimerEvent struct {
+	UUID     string
 	Type     string
 	Name     string
 	Receiver tgapi.User
@@ -89,6 +92,7 @@ func newTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, per
 				wg.Add(len(process))
 				for _, event := range process {
 					go func(event *TimerEvent) {
+						ctx = logging.WithTag(ctx, "EVENT", event.UUID)
 						err := eng.Receive(ctx, event)
 						res.mx.Lock()
 						defer res.mx.Unlock()
@@ -133,7 +137,13 @@ func (t *Timer) SetAlarm(user tgapi.User, name string, typ string, at time.Time)
 		t.queue[i].Time = at
 	} else {
 		t.events[user][key] = at
-		t.queue = append(t.queue, &TimerEvent{Name: name, Type: typ, Receiver: user, Time: at})
+		t.queue = append(t.queue, &TimerEvent{
+			UUID:     uuid.NewString(),
+			Name:     name,
+			Type:     typ,
+			Receiver: user,
+			Time:     at,
+		})
 	}
 	sort.Slice(t.queue, func(i, j int) bool { return t.queue[i].Time.Before(t.queue[i].Time) })
 }

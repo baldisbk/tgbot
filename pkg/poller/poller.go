@@ -63,8 +63,10 @@ func (p *Poller) run(ctx context.Context) {
 			var err error
 			switch {
 			case upd.Message != nil:
+				ctx = logging.WithTag(ctx, "EVENT", upd.Message.UUID)
 				err = p.Engine.Receive(ctx, upd.Message)
 			case upd.CallbackQuery != nil:
+				ctx = logging.WithTag(ctx, "EVENT", upd.CallbackQuery.UUID)
 				err = p.Engine.Receive(ctx, upd.CallbackQuery)
 			}
 			// TODO process different errors

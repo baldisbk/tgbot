@@ -60,12 +60,10 @@ func TestTimer(t *testing.T) {
 				"Receive",
 				mock.Anything,
 				mock.MatchedBy(func(e *TimerEvent) bool {
-					return *e == TimerEvent{
-						Type:     "1",
-						Name:     "1",
-						Receiver: user1,
-						Time:     alarm1,
-					}
+					return e.Type == "1" &&
+						e.Name == "1" &&
+						e.Receiver == user1 &&
+						e.Time == alarm1
 				})).
 				Return(nil).
 				Run(func(args mock.Arguments) { received1 = true })
@@ -73,12 +71,10 @@ func TestTimer(t *testing.T) {
 				"Receive",
 				mock.Anything,
 				mock.MatchedBy(func(e *TimerEvent) bool {
-					return *e == TimerEvent{
-						Type:     "2",
-						Name:     "2",
-						Receiver: user2,
-						Time:     alarm2,
-					}
+					return e.Type == "2" &&
+						e.Name == "2" &&
+						e.Receiver == user2 &&
+						e.Time == alarm2
 				})).
 				Return(nil).
 				Run(func(args mock.Arguments) { received2 = true })

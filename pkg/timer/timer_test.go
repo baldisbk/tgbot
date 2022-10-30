@@ -80,6 +80,8 @@ func TestTimer(t *testing.T) {
 				Run(func(args mock.Arguments) { received2 = true })
 
 			timer := newTimer(ctx, engine, clock, time.Second)
+			defer timer.Shutdown()
+
 			if c.alarm1 != 0 {
 				timer.SetAlarm(user1, "1", "1", alarm1)
 			}

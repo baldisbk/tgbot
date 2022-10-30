@@ -32,6 +32,8 @@ func TestPoller(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			clock := clockwork.NewFakeClock()
 			engine := engine.NewEngineMock()
 
@@ -70,8 +72,6 @@ func TestPoller(t *testing.T) {
 			time.Sleep(time.Millisecond)
 			// engine called
 			engine.AssertExpectations(t)
-
-			cancel()
 		})
 	}
 }

@@ -22,6 +22,7 @@ func main() {
 	var err error
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -31,6 +32,7 @@ func main() {
 		fmt.Printf("Logger: %#v", err)
 		os.Exit(1)
 	}
+	defer logger.Sync()
 	ctx = logging.WithLogger(ctx, logger)
 
 	config, err := config.ParseConfig()
@@ -64,5 +66,4 @@ func main() {
 	defer poll.Shutdown()
 
 	<-signals
-	cancel()
 }

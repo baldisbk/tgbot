@@ -2,7 +2,6 @@ package poller
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/jonboulle/clockwork"
@@ -19,7 +18,7 @@ type Poller struct {
 	config Config
 	clock  clockwork.Clock
 
-	wg sync.WaitGroup
+	stopper chan struct{}
 }
 
 type Config struct {
@@ -33,46 +32,47 @@ func NewPoller(ctx context.Context, cfg Config, client tgapi.TGClient, engine en
 func newPoller(ctx context.Context, cfg Config, clock clockwork.Clock,
 	client tgapi.TGClient, engine engine.Engine) *Poller {
 	poller := &Poller{
-		Client: client,
-		Engine: engine,
-		config: cfg,
-		clock:  clock,
+		Client:  client,
+		Engine:  engine,
+		config:  cfg,
+		clock:   clock,
+		stopper: make(chan struct{}),
 	}
-	poller.wg.Add(1)
 	go poller.run(ctx)
 	return poller
 }
 
-func (p *Poller) Shutdown() { p.wg.Wait() }
+func (p *Poller) Shutdown() { p.stopper <- struct{}{} }
 
 func (p *Poller) run(ctx context.Context) {
 	ticker := p.clock.NewTicker(p.config.PollPeriod)
-	defer p.wg.Done()
 	for {
 		select {
+		case <-ticker.Chan():
+			upds, err := p.Client.GetUpdates(ctx)
+			if err != nil {
+				logging.S(ctx).Errorf("Error getting updates: %#v", err)
+				continue
+			}
+			for _, upd := range upds {
+				var err error
+				switch {
+				case upd.Message != nil:
+					ctx = logging.WithTag(ctx, "EVENT", upd.Message.UUID)
+					err = p.Engine.Receive(ctx, upd.Message)
+				case upd.CallbackQuery != nil:
+					ctx = logging.WithTag(ctx, "EVENT", upd.CallbackQuery.UUID)
+					err = p.Engine.Receive(ctx, upd.CallbackQuery)
+				}
+				// TODO process different errors
+				if err != nil {
+					logging.S(ctx).Errorf("Error processing update (%#v): %#v", upd, err)
+				}
+			}
+		case <-p.stopper:
+			return
 		case <-ctx.Done():
 			return
-		case <-ticker.Chan():
-		}
-		upds, err := p.Client.GetUpdates(ctx)
-		if err != nil {
-			logging.S(ctx).Errorf("Error getting updates: %#v", err)
-			continue
-		}
-		for _, upd := range upds {
-			var err error
-			switch {
-			case upd.Message != nil:
-				ctx = logging.WithTag(ctx, "EVENT", upd.Message.UUID)
-				err = p.Engine.Receive(ctx, upd.Message)
-			case upd.CallbackQuery != nil:
-				ctx = logging.WithTag(ctx, "EVENT", upd.CallbackQuery.UUID)
-				err = p.Engine.Receive(ctx, upd.CallbackQuery)
-			}
-			// TODO process different errors
-			if err != nil {
-				logging.S(ctx).Errorf("Error processing update (%#v): %#v", upd, err)
-			}
 		}
 	}
 }

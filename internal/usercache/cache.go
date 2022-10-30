@@ -64,7 +64,7 @@ func (c *cache) Put(ctx context.Context, tgUser tgapi.User, state pkgcache.User)
 }
 
 // TODO close DB connection
-func (c *cache) Close() {}
+func (c *cache) Close() { c.db.Close() }
 
 func (c *cache) AttachFactory(factory UserFactory) {
 	c.factory = factory

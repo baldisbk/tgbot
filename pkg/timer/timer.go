@@ -45,17 +45,15 @@ type Timer struct {
 	queue  []*TimerEvent
 
 	clock    clockwork.Clock
-	wg       sync.WaitGroup
 	testSync sync.WaitGroup
+	stopper  chan struct{}
 }
 
 func NewTimer(ctx context.Context, cfg Config, eng engine.Engine) *Timer {
 	return newTimer(ctx, eng, clockwork.NewRealClock(), cfg.Period)
 }
 
-func (t *Timer) Shutdown() {
-	t.wg.Wait()
-}
+func (t *Timer) Shutdown() { t.stopper <- struct{}{} }
 
 // warning: use this, not clock.Advance
 func (t *Timer) advance(d time.Duration) {
@@ -69,17 +67,13 @@ func (t *Timer) advance(d time.Duration) {
 func newTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, period time.Duration) *Timer {
 	ticker := clock.NewTicker(period)
 	res := &Timer{
-		events: map[tgapi.User]map[timerKey]time.Time{},
-		clock:  clock,
+		events:  map[tgapi.User]map[timerKey]time.Time{},
+		clock:   clock,
+		stopper: make(chan struct{}),
 	}
-	res.wg.Add(1)
 	go func() {
 		for {
 			select {
-			case <-ctx.Done():
-				ticker.Stop()
-				res.wg.Done()
-				return
 			case <-ticker.Chan():
 				now := clock.Now()
 				res.mx.Lock()
@@ -113,6 +107,12 @@ func newTimer(ctx context.Context, eng engine.Engine, clock clockwork.Clock, per
 				if _, ok := res.clock.(clockwork.FakeClock); ok {
 					res.testSync.Done()
 				}
+			case <-res.stopper:
+				ticker.Stop()
+				return
+			case <-ctx.Done():
+				ticker.Stop()
+				return
 			}
 		}
 	}()

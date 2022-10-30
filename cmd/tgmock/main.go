@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/baldisbk/tgbot_sample/internal/config"
 	"github.com/baldisbk/tgbot_sample/pkg/logging"
@@ -16,17 +19,15 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// var wg sync.WaitGroup
-	// defer wg.Wait()
-
-	// signals := make(chan os.Signal)
-	// signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	signals := make(chan os.Signal)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		fmt.Printf("Logger: %#v", err)
 		os.Exit(1)
 	}
+	defer logger.Sync()
 	ctx = logging.WithLogger(ctx, logger)
 
 	var cfg Config
@@ -37,11 +38,14 @@ func main() {
 	}
 	cfg.ConfigFlags = *flags
 
-	err = NewServer(ctx, cfg).ListenAndServe()
-	if err != nil {
-		logging.S(ctx).Errorf("serve error: %s", err)
-		os.Exit(1)
-	}
+	server := NewServer(ctx, cfg)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logging.S(ctx).Errorf("Serve error: %s", err)
+			os.Exit(1)
+		}
+	}()
+	defer server.Shutdown(ctx)
 
-	// <-signals
+	<-signals
 }

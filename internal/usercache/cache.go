@@ -3,6 +3,7 @@ package usercache
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/baldisbk/tgbot_sample/internal/impl"
 	"github.com/baldisbk/tgbot_sample/pkg/logging"
@@ -20,7 +21,7 @@ type cache struct {
 	// TODO: change to LRU cache
 	cache   map[uint64]*impl.User
 	factory UserFactory
-	db      *DB
+	db      DB
 }
 
 func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error) {
@@ -29,7 +30,7 @@ func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error)
 		return u, nil
 	} else {
 		u := c.factory.MakeUser(user)
-		stored, err := c.db.Get(user.Id)
+		stored, err := c.db.Get(ctx, user.Id)
 		if err != nil {
 			if err != noRowsError {
 				return nil, xerrors.Errorf("get: %w", err)
@@ -53,7 +54,7 @@ func (c *cache) Put(ctx context.Context, tgUser tgapi.User, state pkgcache.User)
 	if err != nil {
 		return xerrors.Errorf("marshal: %w", err)
 	}
-	if err := c.db.Add(StoredUser{
+	if err := c.db.Add(ctx, StoredUser{
 		Id:       tgUser.Id,
 		Name:     tgUser.FirstName,
 		Contents: string(content),
@@ -63,26 +64,40 @@ func (c *cache) Put(ctx context.Context, tgUser tgapi.User, state pkgcache.User)
 	return nil
 }
 
-// TODO close DB connection
 func (c *cache) Close() { c.db.Close() }
 
-func (c *cache) AttachFactory(factory UserFactory) {
+func (c *cache) AttachFactory(ctx context.Context, factory UserFactory) error {
 	c.factory = factory
-	users, _ := c.db.List()
+	users, err := c.db.List(ctx)
+	if err != nil {
+		return xerrors.Errorf("list: %w", err)
+	}
 	for _, user := range users {
 		u := c.factory.MakeUser(tgapi.User{Id: user.Id, FirstName: user.Name})
-		if err := json.Unmarshal([]byte(user.Contents), u); err == nil {
-			u.Wake()
+		if err := json.Unmarshal([]byte(user.Contents), u); err != nil {
+			return xerrors.Errorf("make user: %w", err)
 		}
+		u.Wake()
 	}
+	return nil
 }
 
 type Config struct {
-	Filename string `yaml:"database"`
+	Driver string `yaml:"driver"`
+	Path   string `yaml:"path"`
 }
 
-func NewCache(cfg Config) (*cache, error) {
-	db, err := NewDB(cfg.Filename)
+func NewCache(ctx context.Context, cfg Config) (*cache, error) {
+	var db DB
+	var err error
+	switch strings.ToLower(cfg.Driver) {
+	case "sqlite":
+		db, err = NewSQLiteDB(ctx, cfg.Path)
+	case "pg":
+		db, err = NewPGDB(ctx, cfg.Path)
+	default:
+		return nil, xerrors.Errorf("unknown driver: %q", cfg.Driver)
+	}
 	if err != nil {
 		return nil, xerrors.Errorf("new db: %w", err)
 	}

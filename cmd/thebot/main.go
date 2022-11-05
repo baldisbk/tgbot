@@ -47,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	cache, err := usercache.NewCache(config.CacheConfig)
+	cache, err := usercache.NewCache(ctx, config.CacheConfig)
 	if err != nil {
 		logging.S(ctx).Errorf("DB client: %#v", err)
 		os.Exit(1)
@@ -60,7 +60,10 @@ func main() {
 	defer tim.Shutdown()
 
 	factory := impl.NewFactory(config.FactoryConfig, tgClient, tim)
-	cache.AttachFactory(factory)
+	if err := cache.AttachFactory(ctx, factory); err != nil {
+		logging.S(ctx).Errorf("attach factory: %#v", err)
+		os.Exit(1)
+	}
 
 	poll := poller.NewPoller(ctx, config.PollerConfig, tgClient, eng)
 	defer poll.Shutdown()

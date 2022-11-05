@@ -13,8 +13,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var defaultPath = "/etc/tgbot/config.yaml"
-var develPath = "config.yaml"
+const (
+	defaultPath = "/etc/tgbot/config.yaml"
+	develPath   = "config.yaml"
+)
 
 var configPath = flag.String("config", "", "path to config")
 var develMode = flag.Bool("devel", false, "development mode")

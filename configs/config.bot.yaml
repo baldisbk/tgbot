@@ -1,0 +1,19 @@
+tgapi:
+  address: "http://localhost:1234/"
+#  token: "1607353956:AAGbM0Sp4d56fXK6zbBm9o252PRO9ON-gx4"
+#  address: "https://api.telegram.org/"
+
+user_cache:
+#  driver: sqlite
+#  path: db.sqlite
+  driver: pg
+  path: "pg:5432"
+
+user_factory:
+  dialog_timeout: 10m
+
+poller:
+  period: 5s
+
+timer:
+  period: 5s

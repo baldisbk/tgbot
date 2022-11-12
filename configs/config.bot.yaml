@@ -1,11 +1,9 @@
 tgapi:
+  # TODO - move address to env
   address: "http://localhost:1234/"
-#  token: "1607353956:AAGbM0Sp4d56fXK6zbBm9o252PRO9ON-gx4"
-#  address: "https://api.telegram.org/"
 
 user_cache:
-#  driver: sqlite
-#  path: db.sqlite
+  # TODO - move path to env
   driver: pg
   path: "pg:5432"
 

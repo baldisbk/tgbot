@@ -4,7 +4,11 @@ services:
     build:
       context: .
       target: bot
-#ENV TGBOT_TG_TOKEN="1607353956:AAGbM0Sp4d56fXK6zbBm9o252PRO9ON-gx4"
+    environment:
+      - TGBOT_TG_TOKEN
+      - TGBOT_TG_ADDRESS
+      - TGBOT_DB_DRIVER
+      - TGBOT_DB_PATH
   mock:
     build:
       context: .

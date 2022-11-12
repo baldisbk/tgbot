@@ -8,13 +8,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/baldisbk/tgbot_sample/internal/config"
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
 	"go.uber.org/zap"
+
+	"github.com/baldisbk/tgbot_sample/internal/config"
+	"github.com/baldisbk/tgbot_sample/internal/tgmock"
+	"github.com/baldisbk/tgbot_sample/pkg/logging"
 )
 
 func main() {
 	var err error
+	fmt.Printf("Starting mock...\n")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -30,7 +33,7 @@ func main() {
 	defer logger.Sync()
 	ctx = logging.WithLogger(ctx, logger)
 
-	var cfg Config
+	var cfg tgmock.Config
 	flags, err := config.ParseCustomConfig(&cfg)
 	if err != nil {
 		logging.S(ctx).Errorf("Read config: %#v", err)
@@ -38,7 +41,7 @@ func main() {
 	}
 	cfg.ConfigFlags = *flags
 
-	server := NewServer(ctx, cfg)
+	server := tgmock.NewServer(ctx, cfg)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logging.S(ctx).Errorf("Serve error: %s", err)

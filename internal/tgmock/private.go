@@ -1,4 +1,4 @@
-package main
+package tgmock
 
 import (
 	"encoding/json"

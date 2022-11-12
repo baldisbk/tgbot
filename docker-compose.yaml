@@ -1,0 +1,16 @@
+version: "3.4"
+services:
+  bot:
+    build:
+      context: .
+      target: bot
+#ENV TGBOT_TG_TOKEN="1607353956:AAGbM0Sp4d56fXK6zbBm9o252PRO9ON-gx4"
+  mock:
+    build:
+      context: .
+      target: mock
+  pg:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password

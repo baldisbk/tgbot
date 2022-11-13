@@ -6,9 +6,11 @@ import (
 
 	"github.com/baldisbk/tgbot_sample/internal/impl"
 	"github.com/baldisbk/tgbot_sample/internal/usercache"
+	"github.com/baldisbk/tgbot_sample/pkg/envconfig"
 	"github.com/baldisbk/tgbot_sample/pkg/poller"
 	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
 	"github.com/baldisbk/tgbot_sample/pkg/timer"
+
 	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v3"
 )
@@ -64,7 +66,10 @@ func ParseConfig() (*Config, error) {
 	var cfg Config
 	flags, err := ParseCustomConfig(&cfg)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("parse: %w", err)
+	}
+	if err := envconfig.UnmarshalEnv(&cfg); err != nil {
+		return nil, xerrors.Errorf("parse env: %w", err)
 	}
 	cfg.ConfigFlags = *flags
 	return &cfg, nil

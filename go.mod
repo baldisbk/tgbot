@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v5 v5.0.4
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/mattn/go-sqlite3 v1.14.7
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect

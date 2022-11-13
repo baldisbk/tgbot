@@ -2,9 +2,6 @@ package tgapi
 
 import (
 	"context"
-	"os"
-
-	"golang.org/x/xerrors"
 )
 
 const (
@@ -15,25 +12,9 @@ const (
 	EditCmd    = "editMessageText"
 )
 
-const (
-	envToken = "TGBOT_TG_TOKEN"
-)
-
-type Config config
-
-type config struct {
-	Address string `yaml:"address"`
-	Token   string `yaml:"token"`
-}
-
-func (cfg *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	if err := unmarshal((*config)(cfg)); err != nil {
-		return xerrors.Errorf("unmarshal: %w", err)
-	}
-	if token, ok := os.LookupEnv(envToken); ok {
-		cfg.Token = token
-	}
-	return nil
+type Config struct {
+	Address string `yaml:"address" env:"TGBOT_TG_ADDRESS"`
+	Token   string `yaml:"token" env:"TGBOT_TG_TOKEN"`
 }
 
 type TGClient interface {

@@ -1,11 +1,6 @@
 tgapi:
-  # TODO - move address to env
-  address: "http://localhost:1234/"
 
 user_cache:
-  # TODO - move path to env
-  driver: pg
-  path: "pg:5432"
 
 user_factory:
   dialog_timeout: 10m

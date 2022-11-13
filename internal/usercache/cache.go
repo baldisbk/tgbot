@@ -83,8 +83,8 @@ func (c *cache) AttachFactory(ctx context.Context, factory UserFactory) error {
 }
 
 type Config struct {
-	Driver string `yaml:"driver"`
-	Path   string `yaml:"path"`
+	Driver string `yaml:"driver" env:"TGBOT_DB_DRIVER"`
+	Path   string `yaml:"path" env:"TGBOT_DB_PATH"`
 }
 
 func NewCache(ctx context.Context, cfg Config) (*cache, error) {

@@ -1,23 +1,19 @@
 package tgapi
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
 
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
+	"github.com/baldisbk/tgbot_sample/pkg/httputils"
 	"golang.org/x/xerrors"
 )
 
 // ======== Client ========
 
 type tgClient struct {
-	client *http.Client
-	path   string
+	httputils.BaseClient
 	offset uint64
 }
 
@@ -31,12 +27,12 @@ func makeCmd(address, token string) (string, error) {
 }
 
 func NewClient(ctx context.Context, cfg Config) (*tgClient, error) {
-	cli := &tgClient{client: &http.Client{}}
+	cli := &tgClient{BaseClient: httputils.BaseClient{Client: &http.Client{}}}
 	path, err := makeCmd(cfg.Address, cfg.Token)
 	if err != nil {
 		return nil, xerrors.Errorf("make url: %w", err)
 	}
-	cli.path = path
+	cli.Path = path
 	if err := cli.Test(ctx); err != nil {
 		return nil, xerrors.Errorf("test: %w", err)
 	}
@@ -44,51 +40,20 @@ func NewClient(ctx context.Context, cfg Config) (*tgClient, error) {
 }
 
 func (c *tgClient) Test(ctx context.Context) error {
-	req, err := http.NewRequest(http.MethodGet, c.path+TestCmd, nil)
+	req, err := http.NewRequest(http.MethodGet, c.Path+TestCmd, nil)
 	if err != nil {
 		return xerrors.Errorf("make req: %w", err)
 	}
-	_, err = c.client.Do(req)
+	_, err = c.Client.Do(req)
 	if err != nil {
 		return xerrors.Errorf("request: %w", err)
-	}
-	return nil
-}
-
-func (c *tgClient) request(ctx context.Context, httpmethod, apimethod string, input interface{}, output interface{}) error {
-	body, err := json.Marshal(input)
-	req, err := http.NewRequest(httpmethod, c.path+apimethod, bytes.NewBuffer(body))
-	if err != nil {
-		return xerrors.Errorf("make req: %w", err)
-	}
-	req.Header.Add("Content-Type", "application/json")
-	// TODO middleware
-	logging.S(ctx).Debugf("HTTP REQ: %s, %s, %s", req.URL.String(), req.Method, string(body))
-	rsp, err := c.client.Do(req)
-	if err != nil {
-		return xerrors.Errorf("request: %w", err)
-	}
-	if rsp.StatusCode != http.StatusOK {
-		return xerrors.Errorf("http status: %d", rsp.StatusCode)
-	}
-	body, err = ioutil.ReadAll(rsp.Body)
-	if err != nil {
-		return xerrors.Errorf("read rsp: %w", err)
-	}
-	logging.S(ctx).Debugf("HTTP RSP: %s", string(body))
-	if output == nil {
-		return nil
-	}
-	err = json.Unmarshal(body, output)
-	if err != nil {
-		return xerrors.Errorf("parse: %w", err)
 	}
 	return nil
 }
 
 func (c *tgClient) GetUpdates(ctx context.Context) ([]Update, error) {
 	var res UpdateResponse
-	err := c.request(ctx, http.MethodGet, ReceiveCmd, GetUpdates{Offset: c.offset}, &res)
+	err := c.Request(ctx, http.MethodGet, ReceiveCmd, GetUpdates{Offset: c.offset}, &res)
 	if err != nil {
 		return nil, xerrors.Errorf("request: %w", err)
 	}
@@ -107,7 +72,7 @@ func (c *tgClient) EditMessage(ctx context.Context, chat uint64, text string, ms
 	if msgId != 0 {
 		cmd = EditCmd
 	}
-	err := c.request(ctx,
+	err := c.Request(ctx,
 		http.MethodPost, cmd,
 		SendParams{
 			ChatId:    chat,
@@ -125,7 +90,7 @@ func (c *tgClient) SendMessage(ctx context.Context, chat uint64, text string) (u
 }
 
 func (c *tgClient) AnswerCallback(ctx context.Context, callbackId string) error {
-	return c.request(ctx,
+	return c.Request(ctx,
 		http.MethodPost, AnswerCmd,
 		AnswerCallback{
 			CallbackQueryId: callbackId,
@@ -138,7 +103,7 @@ func (c *tgClient) EditAnswerKeyboard(ctx context.Context, chat uint64, text str
 	if msgId != 0 {
 		cmd = EditCmd
 	}
-	err := c.request(ctx,
+	err := c.Request(ctx,
 		http.MethodPost, cmd,
 		SendAnswerKeyboard{
 			SendParams: SendParams{
@@ -164,7 +129,7 @@ func (c *tgClient) EditInputKeyboard(ctx context.Context, chat uint64, text stri
 	if msgId != 0 {
 		cmd = EditCmd
 	}
-	err := c.request(ctx,
+	err := c.Request(ctx,
 		http.MethodPost, cmd,
 		SendInlineKeyboard{
 			SendParams: SendParams{
@@ -185,7 +150,7 @@ func (c *tgClient) CreateInputKeyboard(ctx context.Context, chat uint64, text st
 }
 
 func (c *tgClient) DropKeyboard(ctx context.Context, chat uint64, text string) error {
-	return c.request(ctx,
+	return c.Request(ctx,
 		http.MethodPost, SendCmd,
 		SendDropKeyboard{
 			SendParams: SendParams{

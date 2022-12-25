@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
+var (
 	defaultPath = "/etc/tgbot/config.yaml"
 	develPath   = "config.yaml"
 )

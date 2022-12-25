@@ -2,6 +2,7 @@ package tgapi
 
 import (
 	"context"
+	"time"
 )
 
 const (
@@ -13,8 +14,9 @@ const (
 )
 
 type Config struct {
-	Address string `yaml:"address" env:"TGBOT_TG_ADDRESS"`
-	Token   string `yaml:"token" env:"TGBOT_TG_TOKEN"`
+	Address string        `yaml:"address" env:"TGBOT_TG_ADDRESS"`
+	Token   string        `yaml:"token" env:"TGBOT_TG_TOKEN"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 type TGClient interface {

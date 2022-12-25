@@ -5,12 +5,15 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/baldisbk/tgbot_sample/pkg/httputils"
 	"golang.org/x/xerrors"
 )
 
 // ======== Client ========
+
+const defaultConnectTimeout = 10 * time.Second
 
 type tgClient struct {
 	httputils.BaseClient
@@ -27,7 +30,17 @@ func makeCmd(address, token string) (string, error) {
 }
 
 func NewClient(ctx context.Context, cfg Config) (*tgClient, error) {
-	cli := &tgClient{BaseClient: httputils.BaseClient{Client: &http.Client{}}}
+	timeout := cfg.Timeout
+	if timeout == 0 {
+		timeout = defaultConnectTimeout
+	}
+	cli := &tgClient{
+		BaseClient: httputils.BaseClient{
+			Client: &http.Client{
+				Timeout: timeout,
+			},
+		},
+	}
 	path, err := makeCmd(cfg.Address, cfg.Token)
 	if err != nil {
 		return nil, xerrors.Errorf("make url: %w", err)
@@ -40,7 +53,7 @@ func NewClient(ctx context.Context, cfg Config) (*tgClient, error) {
 }
 
 func (c *tgClient) Test(ctx context.Context) error {
-	req, err := http.NewRequest(http.MethodGet, c.Path+TestCmd, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.Path+TestCmd, nil)
 	if err != nil {
 		return xerrors.Errorf("make req: %w", err)
 	}

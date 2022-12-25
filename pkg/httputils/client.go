@@ -22,7 +22,7 @@ func (c *BaseClient) Request(ctx context.Context, httpmethod, apimethod string, 
 	if err != nil {
 		return xerrors.Errorf("marshal: %w", err)
 	}
-	req, err := http.NewRequest(httpmethod, c.Path+apimethod, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, httpmethod, c.Path+apimethod, bytes.NewBuffer(body))
 	if err != nil {
 		return xerrors.Errorf("make req: %w", err)
 	}

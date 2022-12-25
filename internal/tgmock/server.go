@@ -14,6 +14,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	privateMessagePath = "/private/message"
+	privateButtonPath  = "/private/button"
+	privateHistoryPath = "/private/history"
+)
+
 type HistoryEntry struct {
 	UserID   uint64 `json:"user_id"`
 	FromUser string
@@ -33,14 +39,15 @@ func NewServer(ctx context.Context, cfg Config) *http.Server {
 	srv := Server{}
 
 	mx := mux.NewRouter()
+	mx.HandleFunc("/{token}/"+tgapi.TestCmd, srv.ping)
 	mx.HandleFunc("/{token}/"+tgapi.ReceiveCmd, srv.update)
 	mx.HandleFunc("/{token}/"+tgapi.SendCmd, srv.message)
 	mx.HandleFunc("/{token}/"+tgapi.AnswerCmd, srv.callback)
 	mx.HandleFunc("/{token}/"+tgapi.EditCmd, srv.message)
 
-	mx.HandleFunc("/private/message", srv.privateMessage)
-	mx.HandleFunc("/private/button", srv.privateButton)
-	mx.HandleFunc("/private/history", srv.privateHistory)
+	mx.HandleFunc(privateMessagePath, srv.privateMessage)
+	mx.HandleFunc(privateButtonPath, srv.privateButton)
+	mx.HandleFunc(privateHistoryPath, srv.privateHistory)
 
 	mx.NotFoundHandler = http.HandlerFunc(srv.dflt)
 
@@ -79,6 +86,18 @@ func (s *Server) dflt(rw http.ResponseWriter, r *http.Request) {
 	}
 	vars := mux.Vars(r)
 	logging.S(r.Context()).Infof("??? %s %s %s", r.URL, string(cts), vars["token"])
+	rw.Write([]byte("{}"))
+	return
+}
+
+func (s *Server) ping(rw http.ResponseWriter, r *http.Request) {
+	_, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
+		return
+	}
+	vars := mux.Vars(r)
+	logging.S(r.Context()).Infof("ping %s", vars["token"])
 	rw.Write([]byte("{}"))
 	return
 }

@@ -83,18 +83,21 @@ func (c *cache) AttachFactory(ctx context.Context, factory UserFactory) error {
 }
 
 type Config struct {
-	Driver string `yaml:"driver" env:"TGBOT_DB_DRIVER"`
-	Path   string `yaml:"path" env:"TGBOT_DB_PATH"`
+	Driver   string `yaml:"driver" env:"TGBOT_DB_DRIVER"`
+	Path     string `yaml:"path" env:"TGBOT_DB_PATH"`
+	User     string `yaml:"user" env:"TGBOT_DB_USER"`
+	Password string `yaml:"-" env:"TGBOT_DB_PASSWORD"`
+	Database string `yaml:"database" env:"TGBOT_DB_DATABASE"`
 }
 
 func NewCache(ctx context.Context, cfg Config) (*cache, error) {
 	var db DB
 	var err error
 	switch strings.ToLower(cfg.Driver) {
-	case "sqlite":
-		db, err = NewSQLiteDB(ctx, cfg.Path)
+	case "sqlite":	
+		db, err = NewSQLiteDB(ctx, cfg)
 	case "pg":
-		db, err = NewPGDB(ctx, cfg.Path)
+		db, err = NewPGDB(ctx, cfg)
 	default:
 		return nil, xerrors.Errorf("unknown driver: %q", cfg.Driver)
 	}

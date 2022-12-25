@@ -2,6 +2,7 @@ package usercache
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -12,8 +13,10 @@ type pgDB struct {
 	pool *pgxpool.Pool
 }
 
-func NewPGDB(ctx context.Context, dbPath string) (DB, error) {
-	pool, err := pgxpool.New(context.Background(), dbPath)
+func NewPGDB(ctx context.Context, cfg Config) (DB, error) {
+	path := fmt.Sprintf("postgres://%s:%5s@%s/%s",
+		cfg.User, cfg.Password, cfg.Path, cfg.Database)
+	pool, err := pgxpool.New(ctx, path)
 	if err != nil {
 		return nil, xerrors.Errorf("open: %w", err)
 	}

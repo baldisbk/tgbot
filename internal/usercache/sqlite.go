@@ -9,8 +9,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func NewSQLiteDB(ctx context.Context, dbFile string) (DB, error) {
-	sqlDB, err := sql.Open("sqlite3", dbFile)
+func NewSQLiteDB(ctx context.Context, cfg Config) (DB, error) {
+	sqlDB, err := sql.Open("sqlite3", cfg.Path)
 	if err != nil {
 		return nil, xerrors.Errorf("open: %w", err)
 	}

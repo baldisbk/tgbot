@@ -17,7 +17,6 @@ import (
 
 func main() {
 	var err error
-	fmt.Printf("Starting mock...\n")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -33,6 +32,10 @@ func main() {
 	defer logger.Sync()
 	ctx = logging.WithLogger(ctx, logger)
 
+	logging.S(ctx).Debugf("Starting mock...")
+
+	logging.S(ctx).Debugf("Parsing config...")
+
 	var cfg tgmock.Config
 	flags, err := config.ParseCustomConfig(&cfg)
 	if err != nil {
@@ -40,6 +43,8 @@ func main() {
 		os.Exit(1)
 	}
 	cfg.ConfigFlags = *flags
+
+	logging.S(ctx).Debugf("Starting server at %q...", cfg.Address)
 
 	server := tgmock.NewServer(ctx, cfg)
 	go func() {
@@ -49,6 +54,8 @@ func main() {
 		}
 	}()
 	defer server.Shutdown(ctx)
+
+	logging.S(ctx).Debugf("Mock started")
 
 	<-signals
 }

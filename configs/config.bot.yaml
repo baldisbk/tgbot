@@ -1,6 +1,9 @@
 tgapi:
+  timeout: "10s"
 
 user_cache:
+  driver: pg
+  database: tgbot
 
 user_factory:
   dialog_timeout: 10m

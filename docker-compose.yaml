@@ -4,17 +4,38 @@ services:
     build:
       context: .
       target: bot
+    depends_on:
+      - mock
+      - pg
     environment:
       - TGBOT_TG_TOKEN
       - TGBOT_TG_ADDRESS
       - TGBOT_DB_DRIVER
       - TGBOT_DB_PATH
+      - TGBOT_DB_USER
+      - TGBOT_DB_PASSWORD
+      - TGBOT_DB_DATABASE
+
   mock:
     build:
       context: .
       target: mock
+    ports:
+      - 1234:1234
+
   pg:
     image: postgres
     restart: always
+    ports:
+      - 5432:5432
     environment:
       POSTGRES_PASSWORD: password
+      # POSTGRES_USER: tgbot
+      # POSTGRES_DB: tgbot
+      POSTGRES_HOST_AUTH_METHOD: md5
+
+  console:
+    image: alpine
+    tty: true
+    stdin_open: true
+    entrypoint: /bin/sh

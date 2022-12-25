@@ -9,6 +9,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const (
+	schemaSQLite = `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY ON CONFLICT REPLACE, name TEXT, contents TEXT);`
+	insertSQLite = `INSERT INTO users (id, name, contents) VALUES (?, ?, ?);`
+	selectSQLite = `SELECT name, contents FROM users WHERE id=?;`
+	listSQLite   = `SELECT name, contents FROM users;` // TODO paging
+)
+
 func NewSQLiteDB(ctx context.Context, cfg Config) (DB, error) {
 	sqlDB, err := sql.Open("sqlite3", cfg.Path)
 	if err != nil {
@@ -30,18 +37,18 @@ type sqliteDB struct {
 
 func (db *sqliteDB) prepare() error {
 	var err error
-	if _, err = db.sql.Exec(schemaSQL); err != nil {
+	if _, err = db.sql.Exec(schemaSQLite); err != nil {
 		return xerrors.Errorf("exec: %w", err)
 	}
-	db.ins, err = db.sql.Prepare(insertSQL)
+	db.ins, err = db.sql.Prepare(insertSQLite)
 	if err != nil {
 		return xerrors.Errorf("prepare insert: %w", err)
 	}
-	db.sel, err = db.sql.Prepare(selectSQL)
+	db.sel, err = db.sql.Prepare(selectSQLite)
 	if err != nil {
 		return xerrors.Errorf("prepare select: %w", err)
 	}
-	db.list, err = db.sql.Prepare(listSQL)
+	db.list, err = db.sql.Prepare(listSQLite)
 	if err != nil {
 		return xerrors.Errorf("prepare list: %w", err)
 	}
@@ -64,7 +71,7 @@ func (db *sqliteDB) Add(ctx context.Context, user StoredUser) error {
 }
 
 func (db *sqliteDB) Get(ctx context.Context, id uint64) (*StoredUser, error) {
-	res, err := db.sql.Query(selectSQL, id)
+	res, err := db.sql.Query(selectSQLite, id)
 	if err != nil {
 		return nil, xerrors.Errorf("exec: %w", err)
 	}
@@ -87,7 +94,7 @@ func (db *sqliteDB) Get(ctx context.Context, id uint64) (*StoredUser, error) {
 }
 
 func (db *sqliteDB) List(ctx context.Context) ([]StoredUser, error) {
-	res, err := db.sql.Query(listSQL)
+	res, err := db.sql.Query(listSQLite)
 	if err != nil {
 		return nil, xerrors.Errorf("exec: %w", err)
 	}

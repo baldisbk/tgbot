@@ -32,7 +32,7 @@ func (c *cache) Get(ctx context.Context, user tgapi.User) (pkgcache.User, error)
 		u := c.factory.MakeUser(user)
 		stored, err := c.db.Get(ctx, user.Id)
 		if err != nil {
-			if err != noRowsError {
+			if xerrors.Is(err, noRowsError) {
 				return nil, xerrors.Errorf("get: %w", err)
 			}
 			logging.S(ctx).Debugf("New user %v", user)
@@ -94,7 +94,7 @@ func NewCache(ctx context.Context, cfg Config) (*cache, error) {
 	var db DB
 	var err error
 	switch strings.ToLower(cfg.Driver) {
-	case "sqlite":	
+	case "sqlite":
 		db, err = NewSQLiteDB(ctx, cfg)
 	case "pg":
 		db, err = NewPGDB(ctx, cfg)

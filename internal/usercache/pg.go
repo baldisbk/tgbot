@@ -9,6 +9,27 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const (
+	schemaPGSQL = `
+CREATE TABLE IF NOT EXISTS users (
+	id INTEGER PRIMARY KEY,
+	name TEXT,
+	contents TEXT
+);`
+	insertPGSQL = `
+INSERT INTO users (id, name, contents)
+VALUES (?, ?, ?)
+ON CONFLICT (id) DO UPDATE
+SET name = ?, contents = ?;`
+	selectPGSQL = `
+SELECT name, contents
+FROM users
+WHERE id=?;`
+	listPGSQL = `
+SELECT name, contents
+FROM users;`  // TODO paging
+)
+
 type pgDB struct {
 	pool *pgxpool.Pool
 }
@@ -21,6 +42,9 @@ func NewPGDB(ctx context.Context, cfg Config) (DB, error) {
 		return nil, xerrors.Errorf("open: %w", err)
 	}
 	db := pgDB{pool: pool}
+	if err := db.prepare(ctx); err != nil {
+		return nil, xerrors.Errorf("prepare: %w", err)
+	}
 	return &db, nil
 }
 
@@ -39,9 +63,18 @@ func (db *pgDB) tx(ctx context.Context, proc func(context.Context, pgx.Tx) error
 	return nil
 }
 
+func (db *pgDB) prepare(ctx context.Context) error {
+	return db.tx(ctx, func(ctx context.Context, tx pgx.Tx) error {
+		if _, err := tx.Exec(ctx, schemaPGSQL); err != nil {
+			return xerrors.Errorf("schema: %w", err)
+		}
+		return nil
+	})
+}
+
 func (db *pgDB) Add(ctx context.Context, user StoredUser) error {
 	return db.tx(ctx, func(ctx context.Context, tx pgx.Tx) error {
-		if _, err := tx.Exec(ctx, insertSQL, user.Id, user.Name, user.Contents); err != nil {
+		if _, err := tx.Exec(ctx, insertPGSQL, user.Id, user.Name, user.Contents); err != nil {
 			return xerrors.Errorf("exec: %w", err)
 		}
 		return nil
@@ -52,7 +85,7 @@ func (db *pgDB) Get(ctx context.Context, id uint64) (*StoredUser, error) {
 	var rows pgx.Rows
 	err := db.tx(ctx, func(ctx context.Context, tx pgx.Tx) error {
 		var err error
-		rows, err = db.pool.Query(ctx, selectSQL, id)
+		rows, err = db.pool.Query(ctx, selectPGSQL, id)
 		if err != nil {
 			return xerrors.Errorf("exec: %w", err)
 		}
@@ -83,7 +116,7 @@ func (db *pgDB) List(ctx context.Context) ([]StoredUser, error) {
 	var rows pgx.Rows
 	err := db.tx(ctx, func(ctx context.Context, tx pgx.Tx) error {
 		var err error
-		rows, err = db.pool.Query(ctx, listSQL)
+		rows, err = db.pool.Query(ctx, listPGSQL)
 		if err != nil {
 			return xerrors.Errorf("exec: %w", err)
 		}

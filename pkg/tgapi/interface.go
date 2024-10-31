@@ -21,7 +21,7 @@ type Config struct {
 
 type TGClient interface {
 	Test(ctx context.Context) error
-	GetUpdates(ctx context.Context) ([]Update, error)
+	GetUpdates(ctx context.Context, offset uint64) ([]Update, uint64, error)
 	EditMessage(ctx context.Context, chat uint64, text string, msgId uint64) (uint64, error)
 	SendMessage(ctx context.Context, chat uint64, text string) (uint64, error)
 	AnswerCallback(ctx context.Context, callbackId string) error

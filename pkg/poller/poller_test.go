@@ -47,7 +47,8 @@ func TestPoller(t *testing.T) {
 			tgClient.On(
 				"GetUpdates",
 				mock.Anything,
-			).Return(updates, nil).Twice()
+				mock.Anything,
+			).Return(updates, uint64(0), nil).Twice()
 
 			clock.Advance(time.Second)
 			time.Sleep(time.Millisecond)

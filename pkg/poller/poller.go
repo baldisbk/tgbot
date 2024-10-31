@@ -20,6 +20,7 @@ type Poller struct {
 
 	config Config
 	clock  clockwork.Clock
+	offset uint64
 
 	stopper chan struct{}
 }
@@ -50,10 +51,11 @@ func (p *Poller) Shutdown() { p.stopper <- struct{}{} }
 func (p *Poller) Sync(ctx context.Context) error { return p.do(ctx, true) }
 
 func (p *Poller) do(ctx context.Context, inSync bool) error {
-	upds, err := p.Client.GetUpdates(ctx)
+	upds, offset, err := p.Client.GetUpdates(ctx, p.offset)
 	if err != nil {
 		return xerrors.Errorf("get updates: %w", err)
 	}
+	p.offset = offset
 	errors := make(chan error, len(upds))
 	var wg sync.WaitGroup
 	if inSync {

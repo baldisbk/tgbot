@@ -19,9 +19,9 @@ func (tg *tgMock) Test(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func (tg *tgMock) GetUpdates(ctx context.Context) ([]Update, error) {
+func (tg *tgMock) GetUpdates(ctx context.Context, offset uint64) ([]Update, uint64, error) {
 	args := tg.Called(ctx)
-	return args[0].([]Update), args.Error(1)
+	return args[0].([]Update), args[1].(uint64), args.Error(2)
 }
 
 func (tg *tgMock) EditMessage(ctx context.Context, chat uint64, text string, msgId uint64) (uint64, error) {

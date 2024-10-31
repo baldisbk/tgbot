@@ -64,19 +64,19 @@ func (c *tgClient) Test(ctx context.Context) error {
 	return nil
 }
 
-func (c *tgClient) GetUpdates(ctx context.Context) ([]Update, error) {
+func (c *tgClient) GetUpdates(ctx context.Context, offset uint64) ([]Update, uint64, error) {
 	var res UpdateResponse
-	err := c.Request(ctx, http.MethodGet, ReceiveCmd, GetUpdates{Offset: c.offset}, &res)
+	err := c.Request(ctx, http.MethodGet, ReceiveCmd, GetUpdates{Offset: offset}, &res)
 	if err != nil {
-		return nil, xerrors.Errorf("request: %w", err)
+		return nil, 0, xerrors.Errorf("request: %w", err)
 	}
 	for _, r := range res.Result {
-		if c.offset <= r.UpdateId {
-			c.offset = r.UpdateId + 1
+		if offset <= r.UpdateId {
+			offset = r.UpdateId + 1
 		}
 		hash(r)
 	}
-	return res.Result, nil
+	return res.Result, offset, nil
 }
 
 func (c *tgClient) EditMessage(ctx context.Context, chat uint64, text string, msgId uint64) (uint64, error) {

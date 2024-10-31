@@ -3,7 +3,7 @@ package statemachine
 import (
 	"context"
 
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/logging"
 )
 
 type SMPredicate func(context.Context, string, interface{}) bool

@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	"github.com/baldisbk/tgbot_sample/pkg/usercache"
+	"github.com/baldisbk/tgbot/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/usercache"
 
 	"golang.org/x/xerrors"
 )

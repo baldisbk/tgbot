@@ -4,12 +4,12 @@ import (
 	"flag"
 	"io/ioutil"
 
-	"github.com/baldisbk/tgbot_sample/internal/impl"
-	"github.com/baldisbk/tgbot_sample/internal/usercache"
-	"github.com/baldisbk/tgbot_sample/pkg/envconfig"
-	"github.com/baldisbk/tgbot_sample/pkg/poller"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	"github.com/baldisbk/tgbot_sample/pkg/timer"
+	"github.com/baldisbk/tgbot/internal/impl"
+	"github.com/baldisbk/tgbot/internal/usercache"
+	"github.com/baldisbk/tgbot/pkg/envconfig"
+	"github.com/baldisbk/tgbot/pkg/poller"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/timer"
 
 	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v3"

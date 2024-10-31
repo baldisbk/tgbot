@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/baldisbk/tgbot_sample/internal/impl"
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	pkgcache "github.com/baldisbk/tgbot_sample/pkg/usercache"
+	"github.com/baldisbk/tgbot/internal/impl"
+	"github.com/baldisbk/tgbot/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
+	pkgcache "github.com/baldisbk/tgbot/pkg/usercache"
 
 	"golang.org/x/xerrors"
 )

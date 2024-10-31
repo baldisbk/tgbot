@@ -8,9 +8,9 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/baldisbk/tgbot_sample/internal/config"
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/internal/config"
+	"github.com/baldisbk/tgbot/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 	"github.com/gorilla/mux"
 )
 

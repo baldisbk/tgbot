@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/baldisbk/tgbot_sample/pkg/statemachine"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	"github.com/baldisbk/tgbot_sample/pkg/timer"
+	"github.com/baldisbk/tgbot/pkg/statemachine"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/timer"
 )
 
 const (

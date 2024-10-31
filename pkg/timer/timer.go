@@ -10,9 +10,9 @@ import (
 	"github.com/jonboulle/clockwork"
 	"golang.org/x/xerrors"
 
-	"github.com/baldisbk/tgbot_sample/pkg/engine"
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/engine"
+	"github.com/baldisbk/tgbot/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 )
 
 type Config struct {

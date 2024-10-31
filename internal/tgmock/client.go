@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/baldisbk/tgbot_sample/pkg/httputils"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/httputils"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 	"golang.org/x/xerrors"
 )
 

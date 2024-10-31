@@ -3,7 +3,7 @@ package usercache
 import (
 	"context"
 
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 )
 
 type User interface {

@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/xerrors"
 
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	"github.com/baldisbk/tgbot_sample/pkg/usercache"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/usercache"
 )
 
 func TestEngine(t *testing.T) {

@@ -1,6 +1,6 @@
 package impl
 
-import "github.com/baldisbk/tgbot_sample/pkg/statemachine"
+import "github.com/baldisbk/tgbot/pkg/statemachine"
 
 const (
 	startState   = "start"

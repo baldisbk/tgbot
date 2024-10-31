@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 )
 
 type PrivateRequest struct {

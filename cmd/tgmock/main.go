@@ -10,9 +10,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/baldisbk/tgbot_sample/internal/config"
-	"github.com/baldisbk/tgbot_sample/internal/tgmock"
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
+	"github.com/baldisbk/tgbot/internal/config"
+	"github.com/baldisbk/tgbot/internal/tgmock"
+	"github.com/baldisbk/tgbot/pkg/logging"
 )
 
 func main() {

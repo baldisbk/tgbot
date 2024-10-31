@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/baldisbk/tgbot_sample/pkg/engine"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/engine"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/mock"
 )

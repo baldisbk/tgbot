@@ -7,7 +7,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/baldisbk/tgbot_sample/pkg/httputils"
+	"github.com/baldisbk/tgbot/pkg/httputils"
 	"golang.org/x/xerrors"
 )
 

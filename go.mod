@@ -1,4 +1,4 @@
-module github.com/baldisbk/tgbot_sample
+module github.com/baldisbk/tgbot
 
 go 1.15
 

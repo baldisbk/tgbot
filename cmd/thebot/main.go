@@ -9,14 +9,14 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/baldisbk/tgbot_sample/internal/config"
-	"github.com/baldisbk/tgbot_sample/internal/impl"
-	"github.com/baldisbk/tgbot_sample/internal/usercache"
-	"github.com/baldisbk/tgbot_sample/pkg/engine"
-	"github.com/baldisbk/tgbot_sample/pkg/logging"
-	"github.com/baldisbk/tgbot_sample/pkg/poller"
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
-	"github.com/baldisbk/tgbot_sample/pkg/timer"
+	"github.com/baldisbk/tgbot/internal/config"
+	"github.com/baldisbk/tgbot/internal/impl"
+	"github.com/baldisbk/tgbot/internal/usercache"
+	"github.com/baldisbk/tgbot/pkg/engine"
+	"github.com/baldisbk/tgbot/pkg/logging"
+	"github.com/baldisbk/tgbot/pkg/poller"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/timer"
 )
 
 func main() {

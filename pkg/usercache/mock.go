@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 )
 
 // ======== User mock ========

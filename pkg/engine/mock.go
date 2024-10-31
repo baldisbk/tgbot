@@ -3,7 +3,7 @@ package engine
 import (
 	"context"
 
-	"github.com/baldisbk/tgbot_sample/pkg/tgapi"
+	"github.com/baldisbk/tgbot/pkg/tgapi"
 	"github.com/stretchr/testify/mock"
 )
 

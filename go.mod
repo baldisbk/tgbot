@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jackc/pgx/v5 v5.0.4
 	github.com/jonboulle/clockwork v0.2.2

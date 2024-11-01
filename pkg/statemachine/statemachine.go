@@ -42,12 +42,15 @@ type Transition struct {
 
 type Machine interface {
 	Run(ctx context.Context, input interface{}) (interface{}, error)
+	State() string
 }
 
 type sm struct {
 	transitions map[string][]Transition
 	state       string
 }
+
+func (s *sm) State() string { return s.state }
 
 func (s *sm) Run(ctx context.Context, input interface{}) (interface{}, error) {
 	for {

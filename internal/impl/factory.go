@@ -36,6 +36,6 @@ func (f *userFactory) MakeUser(u tgapi.User) *User {
 
 		dialogTimeout: f.config.DialogTimeout,
 	}
-	res.machine = statemachine.NewSM(startState, makeTransitions(res))
+	res.machine = statemachine.NewSM(startState, makeTransitions(res), false)
 	return res
 }

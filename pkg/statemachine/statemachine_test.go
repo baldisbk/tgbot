@@ -236,7 +236,7 @@ func TestSM(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			assert := require.New(t)
-			sm := NewSM(tC.startState, tC.transitions)
+			sm := NewSM(tC.startState, tC.transitions, false)
 			output, err := sm.Run(context.Background(), tC.input)
 			if tC.err == nil {
 				assert.NoError(err)

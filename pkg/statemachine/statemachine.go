@@ -48,6 +48,7 @@ type Machine interface {
 type sm struct {
 	transitions map[string][]Transition
 	state       string
+	oneshot     bool
 }
 
 func (s *sm) State() string { return s.state }
@@ -87,13 +88,17 @@ func (s *sm) Run(ctx context.Context, input interface{}) (interface{}, error) {
 			return input, nil
 		}
 		logging.S(stateCtx).Debugf("Switch to state %s", s.state)
+		if s.oneshot {
+			return input, nil
+		}
 	}
 }
 
-func NewSM(state string, trs []Transition) *sm {
+func NewSM(state string, trs []Transition, oneshot bool) *sm {
 	sm := &sm{
 		state:       state,
 		transitions: map[string][]Transition{},
+		oneshot:     oneshot,
 	}
 	for _, tr := range trs {
 		sm.transitions[tr.Source] = append(sm.transitions[tr.Source], tr)

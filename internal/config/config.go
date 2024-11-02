@@ -2,7 +2,7 @@ package config
 
 import (
 	"flag"
-	"io/ioutil"
+	"os"
 
 	"github.com/baldisbk/tgbot/internal/impl"
 	"github.com/baldisbk/tgbot/internal/usercache"
@@ -52,7 +52,7 @@ func ParseCustomConfig(config interface{}) (*ConfigFlags, error) {
 			flags.Path = defaultPath
 		}
 	}
-	contents, err := ioutil.ReadFile(flags.Path)
+	contents, err := os.ReadFile(flags.Path)
 	if err != nil {
 		return nil, xerrors.Errorf("read config: %w", err)
 	}

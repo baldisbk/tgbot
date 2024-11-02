@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 
@@ -79,7 +79,7 @@ func (s *Server) writeError(rw http.ResponseWriter, r *http.Request, code int, m
 }
 
 func (s *Server) dflt(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
 		return
@@ -91,7 +91,7 @@ func (s *Server) dflt(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) ping(rw http.ResponseWriter, r *http.Request) {
-	_, err := ioutil.ReadAll(r.Body)
+	_, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
 		return
@@ -103,7 +103,7 @@ func (s *Server) ping(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) update(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
 		return
@@ -133,18 +133,17 @@ func (s *Server) update(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) message(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	logging.S(r.Context()).Infof("< bot < : %s", string(cts))
 	rw.Write([]byte("{}"))
-	return
 }
 
 func (s *Server) callback(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		return

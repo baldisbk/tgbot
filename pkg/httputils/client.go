@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"golang.org/x/xerrors"
@@ -36,7 +36,7 @@ func (c *BaseClient) Request(ctx context.Context, httpmethod, apimethod string, 
 	if rsp.StatusCode != http.StatusOK {
 		return xerrors.Errorf("http status: %d", rsp.StatusCode)
 	}
-	body, err = ioutil.ReadAll(rsp.Body)
+	body, err = io.ReadAll(rsp.Body)
 	if err != nil {
 		return xerrors.Errorf("read rsp: %w", err)
 	}

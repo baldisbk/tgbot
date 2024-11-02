@@ -2,7 +2,7 @@ package tgmock
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/baldisbk/tgbot/pkg/logging"
@@ -15,7 +15,7 @@ type PrivateRequest struct {
 }
 
 func (s *Server) privateMessage(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
 		return
@@ -45,7 +45,7 @@ func (s *Server) privateMessage(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) privateButton(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
 		return
@@ -73,7 +73,7 @@ func (s *Server) privateButton(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) privateHistory(rw http.ResponseWriter, r *http.Request) {
-	cts, err := ioutil.ReadAll(r.Body)
+	cts, err := io.ReadAll(r.Body)
 	if err != nil {
 		s.writeError(rw, r, http.StatusInternalServerError, "serve err: %s", err)
 		return
